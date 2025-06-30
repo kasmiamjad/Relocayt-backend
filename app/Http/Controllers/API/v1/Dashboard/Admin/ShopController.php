@@ -39,9 +39,9 @@ class ShopController extends AdminBaseController
      */
     public function index(FilterParamsRequest $request): JsonResponse
     {
-        // Log::info('✅ SellerBaseController __construct');
-        // Log::info('🧑 Authenticated user:', [auth('sanctum')->user()]);
-        // Log::info('🏪 Related shop:', [auth('sanctum')->user()?->shop]);
+        Log::info('✅ SellerBaseController __construct');
+        Log::info('🧑 Authenticated user:', [auth('sanctum')->user()]);
+        Log::info('🏪 Related shop:', [auth('sanctum')->user()?->shop]);
 
         $shops = $this->repository->shopsList($request->all());
 
