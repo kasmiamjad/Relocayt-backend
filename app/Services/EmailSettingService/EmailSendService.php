@@ -257,6 +257,19 @@ class EmailSendService extends CoreService
         if (empty($emailSetting)) {
             $emailSetting = EmailSetting::first();
         }
+        Log::debug('PHPMailer Settings:', [
+            'SMTPAuth'    => $mail->SMTPAuth,
+            'Host'        => $mail->Host,
+            'Port'        => $mail->Port,
+            'Username'    => $mail->Username,
+            'Password'    => $mail->Password, // ⚠️ sensitive, remove after debugging
+            'SMTPSecure'  => $mail->SMTPSecure,
+            'From'        => $emailSetting->from_to,
+            'From Name'   => $emailSetting->from_site,
+            'CharSet'     => $mail->CharSet,
+            'IsHTML'      => $emailSetting,
+            'SSL Options' => $mail->SMTPOptions,
+        ]);
 
         $mail = new PHPMailer(true);
         $mail->isHTML();
@@ -266,10 +279,10 @@ class EmailSendService extends CoreService
         $mail->SMTPDebug    = $emailSetting->smtp_debug;*/
         $mail->isSMTP();
         $mail->SMTPAuth     = $emailSetting->smtp_auth;
-        $mail->Host         = $emailSetting->host;
-        $mail->Port         = $emailSetting->port;
-        $mail->Username     = $emailSetting->from_to;'AKIASE53DGGRKWSRQQ5N';//
-        $mail->Password     = $emailSetting->password;'BOQWvY4kxD5co84AP5dpO2CBGkMEO72mbyHfIRF9NYV4';//
+        $mail->Host         = "smtp.postmarkapp.com"; //$emailSetting->host;
+        $mail->Port         = 587; // $emailSetting->port;
+        $mail->Username     = "0ea09fed-69fd-4f15-b6be-06f646ca42ad"; // $emailSetting->from_to;
+        $mail->Password     = "0ea09fed-69fd-4f15-b6be-06f646ca42ad"; //$emailSetting->password;
         $mail->SMTPSecure   = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->SMTPOptions  = data_get($emailSetting, 'ssl.ssl.verify_peer') ? $emailSetting->ssl : [
             'ssl' => [
@@ -278,6 +291,7 @@ class EmailSendService extends CoreService
                 'allow_self_signed' => true
             ]
         ];
+
 
         if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
             abort(403);
