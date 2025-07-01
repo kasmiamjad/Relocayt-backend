@@ -26,9 +26,6 @@ class PrivacyPolicyController extends AdminBaseController
      */
     public function store(StoreRequest $request): JsonResponse
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
 
         $result = $this->service->create($request->validated());
 

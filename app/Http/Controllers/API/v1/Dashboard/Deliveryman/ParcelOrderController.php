@@ -64,10 +64,7 @@ class ParcelOrderController extends DeliverymanBaseController
             );
         }
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
+    
         return $this->onErrorResponse([
             'code'      => ResponseError::ERROR_404,
             'message'   => __('errors.' . ResponseError::ERROR_404, locale: $this->language)

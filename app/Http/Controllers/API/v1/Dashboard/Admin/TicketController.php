@@ -32,10 +32,6 @@ class TicketController extends AdminBaseController
     {
         $tickets = $this->repository->paginate($request->all());
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         return TicketResource::collection($tickets);
     }
 

@@ -34,10 +34,6 @@ class SubscriptionController extends AdminBaseController
     {
         $subscriptions = Subscription::get();
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         return $this->successResponse(
             __('errors.' . ResponseError::NO_ERROR, locale: $this->language),
             SubscriptionResource::collection($subscriptions)

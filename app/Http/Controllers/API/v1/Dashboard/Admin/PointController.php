@@ -31,9 +31,6 @@ class PointController extends AdminBaseController
      */
     public function paginate(FilterParamsRequest $request): AnonymousResourceCollection
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
 
         $points = $this->model
             ->with([

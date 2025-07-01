@@ -33,10 +33,6 @@ class ExtraGroupController extends AdminBaseController
     {
         $extras = $this->repository->extraGroupList($request->merge(['is_admin' => true])->all());
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         return ExtraGroupResource::collection($extras);
     }
 

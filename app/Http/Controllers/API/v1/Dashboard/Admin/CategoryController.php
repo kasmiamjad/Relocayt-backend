@@ -54,10 +54,6 @@ class CategoryController extends AdminBaseController
     {
         $categories = $this->repository->parentCategories($request->merge(['is_admin' => true])->all());
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         return CategoryResource::collection($categories);
     }
 
@@ -86,10 +82,6 @@ class CategoryController extends AdminBaseController
 
         if (!data_get($result, 'status')) {
             return $this->onErrorResponse($result);
-        }
-
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
         }
 
         return $this->successResponse(

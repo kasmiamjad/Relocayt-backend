@@ -115,7 +115,6 @@ class EmailSendService extends CoreService
         $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
 
         $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
-
         try {
 
             $mail->Subject  = data_get($emailTemplate, 'subject', 'Verify your email address');
@@ -257,20 +256,7 @@ class EmailSendService extends CoreService
         if (empty($emailSetting)) {
             $emailSetting = EmailSetting::first();
         }
-        Log::debug('PHPMailer Settings:', [
-            'SMTPAuth'    => $mail->SMTPAuth,
-            'Host'        => $mail->Host,
-            'Port'        => $mail->Port,
-            'Username'    => $mail->Username,
-            'Password'    => $mail->Password, // ⚠️ sensitive, remove after debugging
-            'SMTPSecure'  => $mail->SMTPSecure,
-            'From'        => $emailSetting->from_to,
-            'From Name'   => $emailSetting->from_site,
-            'CharSet'     => $mail->CharSet,
-            'IsHTML'      => $emailSetting,
-            'SSL Options' => $mail->SMTPOptions,
-        ]);
-
+        Log::debug('User email:', ['email' => $user->email]);
         $mail = new PHPMailer(true);
         $mail->isHTML();
         $mail->CharSet = 'UTF-8';
@@ -279,10 +265,10 @@ class EmailSendService extends CoreService
         $mail->SMTPDebug    = $emailSetting->smtp_debug;*/
         $mail->isSMTP();
         $mail->SMTPAuth     = $emailSetting->smtp_auth;
-        $mail->Host         = "smtp.postmarkapp.com"; //$emailSetting->host;
-        $mail->Port         = 587; // $emailSetting->port;
-        $mail->Username     = "0ea09fed-69fd-4f15-b6be-06f646ca42ad"; // $emailSetting->from_to;
-        $mail->Password     = "0ea09fed-69fd-4f15-b6be-06f646ca42ad"; //$emailSetting->password;
+        $mail->Host         = $emailSetting->host;
+        $mail->Port         = $emailSetting->port;
+        $mail->Username     = $emailSetting->from_to;
+        $mail->Password     = $emailSetting->password;
         $mail->SMTPSecure   = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->SMTPOptions  = data_get($emailSetting, 'ssl.ssl.verify_peer') ? $emailSetting->ssl : [
             'ssl' => [
@@ -291,22 +277,30 @@ class EmailSendService extends CoreService
                 'allow_self_signed' => true
             ]
         ];
-
-
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
+        
+        // Log::debug('PHPMailer Settings:', [
+        //     'SMTPAuth'    => $mail->SMTPAuth,
+        //     'Host'        => $mail->Host,
+        //     'Port'        => $mail->Port,
+        //     'Username'    => $mail->Username,
+        //     'Password'    => $mail->Password, // ⚠️ sensitive, remove after debugging
+        //     'SMTPSecure'  => $mail->SMTPSecure,
+        //     'From'        => $emailSetting->from_to,
+        //     'From Name'   => $emailSetting->from_site,
+        //     'CharSet'     => $mail->CharSet,
+        //     'IsHTML'      => $emailSetting,
+        //     'SSL Options' => $mail->SMTPOptions,
+        // ]);
 
         try {
 
-            $mail->setFrom($emailSetting->from_to, $emailSetting->from_site);
+            $mail->setFrom("info@relocayt.ca", $emailSetting->from_site);
             $mail->addAddress($user->email, $user->name_or_email);
 
         } catch (Throwable $e) {
             Log::error($mail->ErrorInfo);
             $this->error($e);
         }
-
         return $mail;
     }
 }

@@ -30,10 +30,6 @@ class EmailTemplateController extends AdminBaseController
      */
     public function index(FilterParamsRequest $request): AnonymousResourceCollection
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         return EmailTemplateResource::collection($this->repository->paginate($request->all()));
     }
 

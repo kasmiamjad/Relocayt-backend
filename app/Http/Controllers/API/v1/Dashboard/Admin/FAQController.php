@@ -40,10 +40,6 @@ class FAQController extends AdminBaseController
             ->orderBy($request->input('column','id'), $request->input('sort', 'desc'))
             ->paginate($request->input('perPage', 15));
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         return FAQResource::collection($faqs);
     }
 

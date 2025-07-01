@@ -27,10 +27,6 @@ class PaymentPayloadService extends CoreService
             return $prepareValidate;
         }
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         try {
 
             $paymentPayload = $this->model()->create($data);
@@ -60,10 +56,6 @@ class PaymentPayloadService extends CoreService
 
             if (!data_get($prepareValidate, 'status')) {
                 return $prepareValidate;
-            }
-
-            if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-                abort(403);
             }
 
             $paymentPayload = PaymentPayload::where('payment_id', $paymentId)->firstOrFail();

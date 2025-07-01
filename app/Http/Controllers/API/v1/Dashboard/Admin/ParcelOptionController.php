@@ -68,10 +68,6 @@ class ParcelOptionController extends AdminBaseController
      */
     public function show(ParcelOption $parcelOption): JsonResponse
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         return $this->successResponse(
             __('errors.' . ResponseError::NO_ERROR, locale: $this->language),
             ParcelOptionResource::make($this->repository->show($parcelOption))
@@ -91,10 +87,6 @@ class ParcelOptionController extends AdminBaseController
 
         if (!data_get($result, 'status')) {
             return $this->onErrorResponse($result);
-        }
-
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
         }
 
         return $this->successResponse(
