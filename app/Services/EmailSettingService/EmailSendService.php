@@ -256,7 +256,7 @@ class EmailSendService extends CoreService
         if (empty($emailSetting)) {
             $emailSetting = EmailSetting::first();
         }
-        Log::debug('User email:', ['email' => $user->email]);
+        //Log::debug('User email:', ['email' => $user->email]);
         $mail = new PHPMailer(true);
         $mail->isHTML();
         $mail->CharSet = 'UTF-8';
