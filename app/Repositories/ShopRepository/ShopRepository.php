@@ -94,73 +94,37 @@ class  ShopRepository extends CoreRepository
         $longitude = data_get($filter, 'address.longitude');
 
         return $shop
-            ->filter($filter)
-            ->with([
-                'translation' => function ($query) use ($filter) {
-
-                    $query->when(data_get($filter, 'not_lang'),
-                        fn($q, $notLang) => $q->where('locale', '!=', data_get($filter, 'not_lang')),
-                        fn($query) => $query->where('locale', $this->language),
-                    );
-
-                },
-                'services' => function ($query) {
-                    $query->select('*')
-                        ->from('services')
-                        ->whereRaw('services.shop_id = id')
-                        ->take(3);
-                },// => fn($q) => $q->take(3),
-                'services.translation' => fn($query) => $query
-                    ->where('locale', $this->language),
-                'services.serviceExtras.translation' => fn($query) => $query
-                    ->where('locale', $this->language)->select('id', 'service_extra_id', 'title', 'locale'),
-                'closedDates',
-                'workingDays' => fn($q) => $q->when(data_get($filter, 'work_24_7'),
-                    fn($b) => $b->where('from', '01-00')->where('to', '>=', '23-00')
-                ),
-            ])
-            ->whereHas('translation', function ($query) use ($filter) {
-
-                $query->when(data_get($filter, 'not_lang'),
-                    fn($q, $notLang) => $q->where('locale', '!=', data_get($filter, 'not_lang')),
-                    fn($query) => $query->where('locale', $this->language),
-                );
-
-            })
-            ->select([
-                'id',
-                'uuid',
-                'slug',
-                'logo_img',
-                'background_img',
-                'status',
-                'type',
-                'delivery_time',
-                'delivery_type',
-                'open',
-                'visibility',
-                'verify',
-                'r_count',
-                'r_avg',
-                'min_price',
-                'max_price',
-                'service_min_price',
-                'service_max_price',
-                'latitude',
-                'longitude',
-            ])
-            ->when(!empty($latitude) && !empty($longitude), function (Builder $query) use ($latitude, $longitude, $filter) {
-                $query
-//                    ->where('latitude', '>', 0)
-//                    ->where('longitude', '>', 0)
-                    ->addSelect([
-                        DB::raw("round(ST_Distance_Sphere(point(`longitude`, `latitude`), point($longitude, $latitude)) / 1000, 1) AS distance"),
-                    ])
-                    ->when(data_get($filter, 'column') === 'distance', function ($q) use ($filter) {
-                        $q->orderBy('distance', $filter['sort'] ?? 'desc');
-                    });
-            })
-            ->paginate($filter['perPage'] ?? 10);
+        ->with([
+            'translation' => fn($q) => $q->where('locale', $this->language),
+            'services' => fn($q) => $q->select('*')->from('services')->whereRaw('services.shop_id = id')->take(3),
+            'services.translation' => fn($q) => $q->where('locale', $this->language),
+            'services.serviceExtras.translation' => fn($q) => $q->where('locale', $this->language)->select('id', 'service_extra_id', 'title', 'locale'),
+            'closedDates',
+            'workingDays',
+        ])
+        ->select([
+            'id',
+            'uuid',
+            'slug',
+            'logo_img',
+            'background_img',
+            'status',
+            'type',
+            'delivery_time',
+            'delivery_type',
+            'open',
+            'visibility',
+            'verify',
+            'r_count',
+            'r_avg',
+            'min_price',
+            'max_price',
+            'service_min_price',
+            'service_max_price',
+            'latitude',
+            'longitude',
+        ])
+        ->paginate($filter['perPage'] ?? 10);
     }
 
     /**
