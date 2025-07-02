@@ -166,7 +166,7 @@ class EmailSendService extends CoreService
                         </html>
                         HTML;
 
-            $activationLink = base_url('auth/activate/' . $user->verify_token);
+            $activationLink = url('auth/activate/' . $user->verify_token);
 
             $mail->Subject = "Confirm Your Email";
             $mail->isHTML(true); // Important to render HTML
