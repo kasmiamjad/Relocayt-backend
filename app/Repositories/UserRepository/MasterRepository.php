@@ -81,8 +81,7 @@ class MasterRepository extends CoreRepository
 
             Log::info('User before loadMin', ['user_id' => $user->id]);
 
-            $user->loadMin('serviceMasters', 'price')
-                ->loadMissing([
+            $user->loadMissing([
                     'invite',
                     'invite.shop',
                     'invite.shop.translation',
