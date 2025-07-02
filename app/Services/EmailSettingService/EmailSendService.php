@@ -134,7 +134,7 @@ class EmailSendService extends CoreService
             $altWithCode    = str_replace('$verify_code', $user->verify_token, $altTemplate);
 
             $mail->Subject = $verifyCode. " - Your Email Verification Code";
-            $mail->Body     = wrapEmailLayout($bodyWithCode);
+            $mail->Body     = $this->wrapEmailLayout($bodyWithCode);
             $mail->AltBody  = $altWithCode;
 
             return [
