@@ -112,7 +112,6 @@ class EmailSendService extends CoreService
 
     public function sendVerify(User $user): array
     {
-        //$emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
         $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
 
         $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
@@ -129,8 +128,6 @@ class EmailSendService extends CoreService
                 </span>
             </div>
             ";
-
-
             $defaultAlt = "Confirm your email\n\nYour verification code is: $verifyCode";
 
             $bodyTemplate = data_get($emailTemplate, 'body', $defaultHtml);
