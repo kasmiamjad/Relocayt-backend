@@ -79,15 +79,15 @@ class  ShopRepository extends CoreRepository
      */
     public function shopsPaginate(array $filter): LengthAwarePaginator
     {
-        DB::listen(function ($query) {
-            Log::info('📥 Executed SQL:', [
-                'sql' => $query->sql,
-                'bindings' => $query->bindings,
-                'time_ms' => $query->time,
-            ]);
-        });
+        // DB::listen(function ($query) {
+        //     Log::info('📥 Executed SQL:', [
+        //         'sql' => $query->sql,
+        //         'bindings' => $query->bindings,
+        //         'time_ms' => $query->time,
+        //     ]);
+        // });
         
-        Log::info('🧾 shopsPaginate filter:', $filter);
+        //Log::info('🧾 shopsPaginate filter:', $filter);
         /** @var Shop $shop */
         $shop      = $this->model();
         $latitude  = data_get($filter, 'address.latitude');
@@ -319,7 +319,7 @@ class  ShopRepository extends CoreRepository
         $shop->property = $property;
     }
 
-    Log::info('SHOP DETAILS new', ['shop' => $shop]);
+    //Log::info('SHOP DETAILS new', ['shop' => $shop]);
     // Log::info('PROPERTY DETAILS', ['property' => $property]);
 
     return $shop;

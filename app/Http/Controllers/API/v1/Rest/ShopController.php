@@ -56,7 +56,7 @@ class ShopController extends RestBaseController
         }
 
         $shops = $this->repository->shopsPaginate($request->merge($merge)->all());
-        Log::info('📤 Returning shop data:', ['data' => $shops]);
+        //Log::info('📤 Returning shop data:', ['data' => $shops]);
         return ShopResource::collection($shops);
     }
 
