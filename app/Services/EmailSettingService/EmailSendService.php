@@ -118,22 +118,34 @@ class EmailSendService extends CoreService
         try {
 
 
-            $verifyCode = $user->verify_token;
+            // $verifyCode = $user->verify_token;
 
             // $mail->Subject = $verifyCode. " - Your Email Verification Code";
             // $mail->Body = str_replace('{{VERIFY_CODE}}', $verifyCode, $htmlTemplate);
             // $mail->AltBody = "Your verification code is: " . $verifyCode;
             // $mail->isHTML(true);
             // $mail->send();
+            $verifyCode = $user->verify_token;
 
-            $default        = $verifyCode. " - Your Email Verification Code";
-            $bodyTemplate   = data_get($emailTemplate, 'body', $default);
-            $altTemplate    = data_get($emailTemplate, 'alt_body', $default);
+            $defaultHtml = '
+            <h2 style="text-align:center;">Confirm your email</h2>
+            <p style="text-align:center;">Your verification code is:</p>
+            <div style="text-align:center;">
+                <span style="display:inline-block; padding:10px 20px; background:#38bdf8; color:#fff; font-size:18px; font-weight:bold; border-radius:6px;">
+                $verify_code
+                </span>
+            </div>
+            ';
 
-            $bodyWithCode   = str_replace('$verify_code', $user->verify_token, $bodyTemplate);
-            $altWithCode    = str_replace('$verify_code', $user->verify_token, $altTemplate);
+            $defaultAlt = "Confirm your email\n\nYour verification code is: $verify_code";
 
-            $mail->Subject = $verifyCode. " - Your Email Verification Code";
+            $bodyTemplate = data_get($emailTemplate, 'body', $defaultHtml);
+            $altTemplate  = data_get($emailTemplate, 'alt_body', $defaultAlt);
+
+            $bodyWithCode = str_replace('$verify_code', $verifyCode, $bodyTemplate);
+            $altWithCode  = str_replace('$verify_code', $verifyCode, $altTemplate);
+
+            $mail->Subject  = $verifyCode . " - Your Email Verification Code";
             $mail->Body     = $this->wrapEmailLayout($bodyWithCode);
             $mail->AltBody  = $altWithCode;
             $mail->isHTML(true);
