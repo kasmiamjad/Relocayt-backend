@@ -74,6 +74,12 @@ class MasterRepository extends CoreRepository
     public function show(?User $user): ?User
     {
         try {
+            Log::info('User before loadMin', ['user' => $user]);
+
+            if (!$user || !($user instanceof \Illuminate\Database\Eloquent\Model)) {
+                throw new \Exception('Invalid user model passed for loadMin.');
+            }
+
             $user = $user
                 ->loadMin('serviceMasters', 'price')
                 ->loadMissing([
@@ -94,10 +100,12 @@ class MasterRepository extends CoreRepository
                 'line'    => $e->getLine(),
                 'file'    => $e->getFile(),
                 'trace'   => $e->getTraceAsString(),
+                'user_debug' => is_object($user) ? get_class($user) : gettype($user)
             ]);
 
             return response()->json(['error' => 'Something went wrong.'], 500);
         }
+
     }
 
 
