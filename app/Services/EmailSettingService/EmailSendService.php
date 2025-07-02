@@ -112,8 +112,20 @@ class EmailSendService extends CoreService
 
     public function sendVerify(User $user): array
     {
+        //$emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
         $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
 
+        if (!empty($emailTemplate?->body)) {
+            Log::info('Email body loaded from DB template.', ['template_id' => $emailTemplate->id ?? null]);
+        } else {
+            Log::warning('Email body not found in DB, using default template.');
+        }
+
+        if (!empty($emailTemplate?->alt_body)) {
+            Log::info('AltBody loaded from DB template.', ['template_id' => $emailTemplate->id ?? null]);
+        } else {
+            Log::warning('AltBody not found in DB, using default.');
+        }
         $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
         try {
 
@@ -127,15 +139,16 @@ class EmailSendService extends CoreService
             // $mail->send();
             $verifyCode = $user->verify_token;
 
-            $defaultHtml = '
-            <h2 style="text-align:center;">Confirm your email</h2>
-            <p style="text-align:center;">Your verification code is:</p>
-            <div style="text-align:center;">
-                <span style="display:inline-block; padding:10px 20px; background:#38bdf8; color:#fff; font-size:18px; font-weight:bold; border-radius:6px;">
-                $verify_code
+            $defaultHtml = "
+            <h2 style=\"text-align:center;\">Confirm your email</h2>
+            <p style=\"text-align:center;\">Your verification code is:</p>
+            <div style=\"text-align:center;\">
+                <span style=\"display:inline-block; padding:10px 20px; background:#38bdf8; color:#fff; font-size:18px; font-weight:bold; border-radius:6px;\">
+                $verifyCode
                 </span>
             </div>
-            ';
+            ";
+
 
             $defaultAlt = "Confirm your email\n\nYour verification code is: $verifyCode";
 
