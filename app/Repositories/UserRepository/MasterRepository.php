@@ -19,7 +19,6 @@ use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class MasterRepository extends CoreRepository
 {
@@ -71,29 +70,29 @@ class MasterRepository extends CoreRepository
      * @param User $user
      * @return User
      */
-    public function show(User $user)
+    public function show(User $user): User
     {
-        if (!$user->exists) {
-            throw new \Exception('Invalid User model passed');
-        }
+        
 
-        $user
+        return $user
             ->loadMin('serviceMasters', 'price')
             ->loadMissing([
-                'invite',
-                'invite.shop',
-                'invite.shop.translation',
-                'translation',
-                'serviceMasters',
-                'serviceMasters.service',
-                'serviceMasters.service.translation',
-                'serviceMasters.extras.translation',
+                'invite' => fn($q) => $q
+                    ->select(['user_id', 'shop_id', 'status'])
+                    ->where('status', Invitation::ACCEPTED),
+                'invite.shop:id,uuid,latitude,longitude',
+                'invite.shop.translation' => fn($query) => $query
+                    ->where('locale', $this->language),
+                'translation' => fn($q) => $q
+                    ->where('locale', $this->language),
+                'serviceMasters' => fn($q) => $q->where('active', true),
+                'serviceMasters.service:id,slug,category_id',
+                'serviceMasters.service.translation'=> fn($q) => $q
+                    ->where('locale', $this->language),
+                'serviceMasters.extras.translation' => fn($q) => $q
+                    ->where('locale', $this->language),
             ]);
-
-        return $user;
     }
-
-
 
     /**
      * @param int $id
