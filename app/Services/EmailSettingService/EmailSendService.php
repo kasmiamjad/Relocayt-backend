@@ -136,6 +136,8 @@ class EmailSendService extends CoreService
             $mail->Subject = $verifyCode. " - Your Email Verification Code";
             $mail->Body     = $this->wrapEmailLayout($bodyWithCode);
             $mail->AltBody  = $altWithCode;
+            $mail->isHTML(true);
+            $mail->send();
 
             return [
                 'status' => true,
