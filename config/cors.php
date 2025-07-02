@@ -19,15 +19,15 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'https://relocayt-admin.effedo.app',
-        'https://relocayt-web.effedo.app',
-        'https://relocayt.ca',
-        'https://admin.relocayt.ca',
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-    ],
-
+    // 'allowed_origins' => [
+    //     'https://relocayt-admin.effedo.app',
+    //     'https://relocayt-web.effedo.app',
+    //     'https://relocayt.ca',
+    //     'https://admin.relocayt.ca',
+    //     'http://localhost:3000',
+    //     'http://127.0.0.1:3000',
+    // ],
+    'allowed_origins' => ['*'],
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
