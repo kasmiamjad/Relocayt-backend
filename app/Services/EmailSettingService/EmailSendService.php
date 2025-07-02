@@ -137,7 +137,7 @@ class EmailSendService extends CoreService
             </div>
             ';
 
-            $defaultAlt = "Confirm your email\n\nYour verification code is: $verify_code";
+            $defaultAlt = "Confirm your email\n\nYour verification code is: $verifyCode";
 
             $bodyTemplate = data_get($emailTemplate, 'body', $defaultHtml);
             $altTemplate  = data_get($emailTemplate, 'alt_body', $defaultAlt);
