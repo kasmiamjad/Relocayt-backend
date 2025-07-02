@@ -175,9 +175,6 @@ class EmailSendService extends CoreService
             $mail->Body = str_replace('{{ACTIVATION_LINK}}', $activationLink, $htmlTemplate);
             $mail->AltBody = "Activate your account by clicking this link: " . $activationLink;
 
-            $mail->Body     = str_replace('$verify_code', $user->verify_token, $body);
-            $mail->AltBody  = str_replace('$verify_code', $user->verify_token, $altBody);
-
             if (!empty(data_get($emailTemplate, 'galleries'))) {
                 foreach ($emailTemplate->galleries as $gallery) {
                     /** @var Gallery $gallery */
