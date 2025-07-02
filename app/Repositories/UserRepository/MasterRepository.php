@@ -74,31 +74,7 @@ class MasterRepository extends CoreRepository
     public function show(?User $user): ?User
     {
         try {
-            if (!$user) {
-                return null;
-            }
-
-            // return $user
-            //     ->loadMin('serviceMasters', 'price')
-            //     ->loadMissing([
-            //         'invite' => fn($q) => $q
-            //             ->select(['user_id', 'shop_id', 'status'])
-            //             ->where('status', Invitation::ACCEPTED),
-            //         'invite.shop:id,uuid,latitude,longitude',
-            //         'invite.shop.translation' => fn($query) => $query
-            //             ->where('locale', $this->language),
-            //         'translation' => fn($q) => $q
-            //             ->where('locale', $this->language),
-            //         'serviceMasters' => fn($q) => $q->where('active', true),
-            //         'serviceMasters.service:id,slug,category_id',
-            //         'serviceMasters.service.translation'=> fn($q) => $q
-            //             ->where('locale', $this->language),
-            //         'serviceMasters.extras.translation' => fn($q) => $q
-            //             ->where('locale', $this->language),
-            //     ]);
-
-
-            return $user
+            $user = $user
                 ->loadMin('serviceMasters', 'price')
                 ->loadMissing([
                     'invite',
@@ -111,13 +87,16 @@ class MasterRepository extends CoreRepository
                     'serviceMasters.extras.translation',
                 ]);
 
+            return $user;
         } catch (\Throwable $e) {
-            \Log::error('MasterRepository@show failed: ' . $e->getMessage(), [
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
+            Log::error('User loadMissing failed', [
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+                'file'    => $e->getFile(),
+                'trace'   => $e->getTraceAsString(),
             ]);
 
-            return null;
+            return response()->json(['error' => 'Something went wrong.'], 500);
         }
     }
 
