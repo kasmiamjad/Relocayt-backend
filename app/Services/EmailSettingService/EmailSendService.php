@@ -117,63 +117,25 @@ class EmailSendService extends CoreService
         $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
         try {
 
-            $htmlTemplate = <<<HTML
-                <!DOCTYPE html>
-                <html>
-                <head>
-                <meta charset="UTF-8">
-                <title>Confirm Your Email</title>
-                </head>
-                <body style="margin:0; padding:0; background-color:#f4faff; font-family:Arial, sans-serif;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4faff; padding: 40px 0;">
-                    <tr>
-                    <td align="center">
-                        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05); max-width:600px;">
-                        <tr>
-                            <td align="center" style="padding: 40px 20px 10px;">
-                            <img src="https://relocayt-images.s3.us-east-1.amazonaws.com/public/images/relocayt-light-text.png" alt="Relocayt Logo" width="150" style="display:block;">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="center" style="padding: 20px 30px 10px;">
-                            <h2 style="margin: 0; color: #000000;">Confirm your email</h2>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="center" style="padding: 0 30px 20px;">
-                            <p style="color:#444444; font-size:16px; line-height:24px; margin:0;">
-                                Thanks for signing up with Relocayt. Use the code below to verify your email address:
-                            </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="center" style="padding: 10px 30px 30px;">
-                            <div style="display:inline-block; padding: 16px 32px; background-color:#38bdf8; color:#ffffff; font-size:20px; font-weight:bold; border-radius:8px; letter-spacing:2px;">
-                                {{VERIFY_CODE}}
-                            </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="center" style="padding: 20px 30px; font-size:12px; color:#999999;">
-                            If you didn’t sign up for Relocayt, you can safely ignore this email.
-                            </td>
-                        </tr>
-                        </table>
-                    </td>
-                    </tr>
-                </table>
-                </body>
-                </html>
-                HTML;
-
 
             $verifyCode = $user->verify_token;
 
-            $mail->Subject = "Your Email Verification Code";
-            $mail->Body = str_replace('{{VERIFY_CODE}}', $verifyCode, $htmlTemplate);
-            $mail->AltBody = "Your verification code is: " . $verifyCode;
-            $mail->isHTML(true);
-            $mail->send();
+            // $mail->Subject = $verifyCode. " - Your Email Verification Code";
+            // $mail->Body = str_replace('{{VERIFY_CODE}}', $verifyCode, $htmlTemplate);
+            // $mail->AltBody = "Your verification code is: " . $verifyCode;
+            // $mail->isHTML(true);
+            // $mail->send();
+
+            $default        = $verifyCode. " - Your Email Verification Code";
+            $bodyTemplate   = data_get($emailTemplate, 'body', $default);
+            $altTemplate    = data_get($emailTemplate, 'alt_body', $default);
+
+            $bodyWithCode   = str_replace('$verify_code', $user->verify_token, $bodyTemplate);
+            $altWithCode    = str_replace('$verify_code', $user->verify_token, $altTemplate);
+
+            $mail->Subject = $verifyCode. " - Your Email Verification Code";
+            $mail->Body     = wrapEmailLayout($bodyWithCode);
+            $mail->AltBody  = $altWithCode;
 
             return [
                 'status' => true,
@@ -191,6 +153,52 @@ class EmailSendService extends CoreService
             ];
         }
     }
+
+    public function wrapEmailLayout($innerHtml)
+        {
+            return <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="UTF-8">
+        <title>Relocayt Email</title>
+        </head>
+        <body style="margin:0; padding:0; background-color:#f4faff; font-family:Arial, sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4faff; padding: 40px 0;">
+            <tr>
+            <td align="center">
+                <!-- Outer Container -->
+                <table cellpadding="0" cellspacing="0" style="width:100%; max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                
+                <!-- Logo -->
+                <tr>
+                    <td align="center" style="padding: 40px 40px 20px;">
+                    <img src="https://relocayt-images.s3.amazonaws.com/public/images/relocayt-light-text.png" alt="Relocayt Logo" width="150" style="display:block;">
+                    </td>
+                </tr>
+
+                <!-- Dynamic Body -->
+                <tr>
+                    <td style="padding: 0 40px 40px;">
+                    $innerHtml
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td align="center" style="padding: 20px 40px; font-size:12px; color:#999999;">
+                    If you didn’t sign up for Relocayt, you can safely ignore this email.
+                    </td>
+                </tr>
+
+                </table>
+            </td>
+            </tr>
+        </table>
+        </body>
+        </html>
+        HTML;
+        }
 
     public function sendEmailPasswordReset(User $user, $str): array
     {
@@ -330,7 +338,7 @@ class EmailSendService extends CoreService
 
         try {
 
-            $mail->setFrom("info@relocayt.ca", $emailSetting->from_site);
+            $mail->setFrom("no-reply@relocayt.ca", $emailSetting->from_site);
             $mail->addAddress($user->email, $user->name_or_email);
 
         } catch (Throwable $e) {
