@@ -115,28 +115,9 @@ class EmailSendService extends CoreService
         //$emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
         $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
 
-        if (!empty($emailTemplate?->body)) {
-            Log::info('Email body loaded from DB template.', ['template_id' => $emailTemplate->id ?? null]);
-        } else {
-            Log::warning('Email body not found in DB, using default template.');
-        }
-
-        if (!empty($emailTemplate?->alt_body)) {
-            Log::info('AltBody loaded from DB template.', ['template_id' => $emailTemplate->id ?? null]);
-        } else {
-            Log::warning('AltBody not found in DB, using default.');
-        }
         $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
         try {
 
-
-            // $verifyCode = $user->verify_token;
-
-            // $mail->Subject = $verifyCode. " - Your Email Verification Code";
-            // $mail->Body = str_replace('{{VERIFY_CODE}}', $verifyCode, $htmlTemplate);
-            // $mail->AltBody = "Your verification code is: " . $verifyCode;
-            // $mail->isHTML(true);
-            // $mail->send();
             $verifyCode = $user->verify_token;
 
             $defaultHtml = "
@@ -182,50 +163,50 @@ class EmailSendService extends CoreService
     }
 
     public function wrapEmailLayout($innerHtml)
-        {
+    {
             return <<<HTML
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <meta charset="UTF-8">
-        <title>Relocayt Email</title>
-        </head>
-        <body style="margin:0; padding:0; background-color:#f4faff; font-family:Arial, sans-serif;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4faff; padding: 40px 0;">
-            <tr>
-            <td align="center">
-                <!-- Outer Container -->
-                <table cellpadding="0" cellspacing="0" style="width:100%; max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-                
-                <!-- Logo -->
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="UTF-8">
+            <title>Relocayt Email</title>
+            </head>
+            <body style="margin:0; padding:0; background-color:#f4faff; font-family:Arial, sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4faff; padding: 40px 0;">
                 <tr>
-                    <td align="center" style="padding: 40px 40px 20px;">
-                    <img src="https://relocayt-images.s3.amazonaws.com/public/images/relocayt-light-text.png" alt="Relocayt Logo" width="150" style="display:block;">
-                    </td>
-                </tr>
+                <td align="center">
+                    <!-- Outer Container -->
+                    <table cellpadding="0" cellspacing="0" style="width:100%; max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                    
+                    <!-- Logo -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 60px;">
+                        <img src="https://relocayt-images.s3.amazonaws.com/public/images/relocayt-light-text.png" alt="Relocayt Logo" width="150" style="display:block;">
+                        </td>
+                    </tr>
 
-                <!-- Dynamic Body -->
-                <tr>
-                    <td style="padding: 0 40px 40px;">
-                    $innerHtml
-                    </td>
-                </tr>
+                    <!-- Dynamic Body -->
+                    <tr>
+                        <td style="padding: 0 40px 40px;">
+                        $innerHtml
+                        </td>
+                    </tr>
 
-                <!-- Footer -->
-                <tr>
-                    <td align="center" style="padding: 20px 40px; font-size:12px; color:#999999;">
-                    If you didn’t sign up for Relocayt, you can safely ignore this email.
-                    </td>
-                </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding: 20px 40px; font-size:12px; color:#999999;">
+                        If you didn’t sign up for Relocayt, you can safely ignore this email.
+                        </td>
+                    </tr>
 
-                </table>
-            </td>
-            </tr>
-        </table>
-        </body>
-        </html>
-        HTML;
-        }
+                    </table>
+                </td>
+                </tr>
+            </table>
+            </body>
+            </html>
+            HTML;
+    }
 
     public function sendEmailPasswordReset(User $user, $str): array
     {
