@@ -71,40 +71,28 @@ class MasterRepository extends CoreRepository
      * @param User $user
      * @return User
      */
-    public function show(?User $user): ?User
+    public function show(User $user)
     {
-        try {
-            $user = User::where('id', $id)->first(); // Ensure single model
-            if (!$user) {
-                throw new \Exception('User not found.');
-            }
+        if (!$user->exists) {
+            throw new \Exception('Invalid User model passed');
+        }
 
-            Log::info('User before loadMin', ['user_id' => $user->id]);
-
-            $user->loadMissing([
-                    'invite',
-                    'invite.shop',
-                    'invite.shop.translation',
-                    'translation',
-                    'serviceMasters',
-                    'serviceMasters.service',
-                    'serviceMasters.service.translation',
-                    'serviceMasters.extras.translation',
-                ]);
-
-            return $user;
-
-        } catch (\Throwable $e) {
-            Log::error('User loadMissing failed', [
-                'message' => $e->getMessage(),
-                'line'    => $e->getLine(),
-                'file'    => $e->getFile(),
-                'trace'   => $e->getTraceAsString(),
+        $user
+            ->loadMin('serviceMasters', 'price')
+            ->loadMissing([
+                'invite',
+                'invite.shop',
+                'invite.shop.translation',
+                'translation',
+                'serviceMasters',
+                'serviceMasters.service',
+                'serviceMasters.service.translation',
+                'serviceMasters.extras.translation',
             ]);
 
-            return response()->json(['error' => 'Something went wrong.'], 500);
-        }
+        return $user;
     }
+
 
 
     /**
