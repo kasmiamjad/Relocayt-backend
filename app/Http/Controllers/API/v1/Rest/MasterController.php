@@ -44,13 +44,23 @@ class MasterController extends RestBaseController
      * @param User $master
      * @return JsonResponse
      */
-    public function show(User $master): JsonResponse
+    public function show_old(User $master): JsonResponse
     {
         return $this->successResponse(
             __('errors.' . ResponseError::NO_ERROR, locale: $this->language),
             UserResource::make($this->repository->show($master))
         );
     }
+
+    public function show($id): JsonResponse
+    {
+        $user = User::findOrFail($id); // Laravel handles 404
+        return $this->successResponse(
+            __('errors.' . ResponseError::NO_ERROR, locale: $this->language),
+            UserResource::make($this->repository->show($user))
+        );
+    }
+
 
     /**
      * Display the specified resource.
