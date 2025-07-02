@@ -118,74 +118,61 @@ class EmailSendService extends CoreService
         try {
 
             $htmlTemplate = <<<HTML
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                        <meta charset="UTF-8">
-                        <title>Confirm Your Email</title>
-                        </head>
-                        <body style="margin:0; padding:0; background-color:#f4faff; font-family:Arial, sans-serif;">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4faff; padding: 40px 0;">
-                            <tr>
-                            <td align="center">
-                                <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05); max-width:600px;">
-                                <tr>
-                                    <td align="center" style="padding: 40px 20px 10px;">
-                                    <img src="https://relocayt-images.s3.us-east-1.amazonaws.com/public/images/relocayt-logo.svg" alt="Relocayt Logo" width="150" style="display:block;">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="padding: 20px 30px 10px;">
-                                    <h2 style="margin: 0; color: #000000;">Confirm your email</h2>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="padding: 0 30px 30px;">
-                                    <p style="color:#444444; font-size:16px; line-height:24px; margin:0;">
-                                        Thanks for signing up with Relocayt. Please confirm your email address to activate your account.
-                                    </p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="padding: 10px 30px 40px;">
-                                    <a href="{{ACTIVATION_LINK}}" style="display:inline-block; padding: 12px 24px; background-color:#38bdf8; color:#ffffff; text-decoration:none; font-weight:bold; border-radius:6px;">
-                                        Activate Account
-                                    </a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="padding: 20px 30px; font-size:12px; color:#999999;">
-                                    If you didn’t sign up for Relocayt, you can safely ignore this email.
-                                    </td>
-                                </tr>
-                                </table>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <meta charset="UTF-8">
+                <title>Confirm Your Email</title>
+                </head>
+                <body style="margin:0; padding:0; background-color:#f4faff; font-family:Arial, sans-serif;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4faff; padding: 40px 0;">
+                    <tr>
+                    <td align="center">
+                        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05); max-width:600px;">
+                        <tr>
+                            <td align="center" style="padding: 40px 20px 10px;">
+                            <img src="https://relocayt-images.s3.us-east-1.amazonaws.com/public/images/relocayt-light-text.png" alt="Relocayt Logo" width="150" style="display:block;">
                             </td>
-                            </tr>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding: 20px 30px 10px;">
+                            <h2 style="margin: 0; color: #000000;">Confirm your email</h2>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding: 0 30px 20px;">
+                            <p style="color:#444444; font-size:16px; line-height:24px; margin:0;">
+                                Thanks for signing up with Relocayt. Use the code below to verify your email address:
+                            </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding: 10px 30px 30px;">
+                            <div style="display:inline-block; padding: 16px 32px; background-color:#38bdf8; color:#ffffff; font-size:20px; font-weight:bold; border-radius:8px; letter-spacing:2px;">
+                                {{VERIFY_CODE}}
+                            </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding: 20px 30px; font-size:12px; color:#999999;">
+                            If you didn’t sign up for Relocayt, you can safely ignore this email.
+                            </td>
+                        </tr>
                         </table>
-                        </body>
-                        </html>
-                        HTML;
+                    </td>
+                    </tr>
+                </table>
+                </body>
+                </html>
+                HTML;
 
-            $activationLink = url('auth/activate/' . $user->verify_token);
 
-            $mail->Subject = "Confirm Your Email";
-            $mail->isHTML(true); // Important to render HTML
+            $verifyCode = $user->verify_token;
 
-            $default        = 'Please enter code for verify your email: verify code new ';
-            $mail->Body = str_replace('{{ACTIVATION_LINK}}', $activationLink, $htmlTemplate);
-            $mail->AltBody = "Activate your account by clicking this link: " . $activationLink;
-
-            if (!empty(data_get($emailTemplate, 'galleries'))) {
-                foreach ($emailTemplate->galleries as $gallery) {
-                    /** @var Gallery $gallery */
-                    try {
-                        $mail->addAttachment(request()->getHttpHost() . '/storage/' . $gallery->path);
-                    } catch (Throwable) {
-                        Log::error($mail->ErrorInfo);
-                    }
-                }
-            }
-
+            $mail->Subject = "Your Email Verification Code";
+            $mail->Body = str_replace('{{VERIFY_CODE}}', $verifyCode, $htmlTemplate);
+            $mail->AltBody = "Your verification code is: " . $verifyCode;
+            $mail->isHTML(true);
             $mail->send();
 
             return [
