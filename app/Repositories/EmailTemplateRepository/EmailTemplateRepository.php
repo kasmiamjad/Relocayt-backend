@@ -15,18 +15,13 @@ class EmailTemplateRepository extends CoreRepository
     }
 
     public function paginate(array $filter) {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
+     
         return $this->model()->paginate($filter['perPage'] ?? 10);
     }
 
     public function show(EmailTemplate $emailTemplate): EmailTemplate
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
+  
         return $emailTemplate->loadMissing(['emailSetting']);
     }
 }

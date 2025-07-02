@@ -23,9 +23,7 @@ class TagRepository extends CoreRepository
         /** @var Tag $tags */
         $tags = $this->model();
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
+        
 
         $column = data_get($data, 'column', 'id');
 

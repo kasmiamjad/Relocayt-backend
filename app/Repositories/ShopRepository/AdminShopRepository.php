@@ -121,10 +121,6 @@ class AdminShopRepository extends CoreRepository
         $longitude      = data_get($filter, 'address.longitude');
         $locationExists = !empty($latitude) && !empty($longitude);
 
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
         $shop = Shop::where('uuid', $uuid)
             ->select('*')
             ->when($locationExists, function (Builder $query) use ($latitude, $longitude) {

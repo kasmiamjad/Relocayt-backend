@@ -23,11 +23,7 @@ class UnitRepository extends CoreRepository
      */
     public function unitsPaginate(array $filter = []): LengthAwarePaginator
     {
-       if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-           abort(403);
-       }
-
-        
+               
         $column = $filter['column'] ?? 'id';
 
         if ($column !== 'id') {
