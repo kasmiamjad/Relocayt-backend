@@ -212,19 +212,40 @@ class EmailSendService extends CoreService
         $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
 
         try {
+            $resetCode = $str;
 
-            $mail->Subject  = data_get($emailTemplate, 'subject', 'Reset password');
+            // Default HTML body for password reset
+            $defaultHtml = <<<HTML
+            <h2 style="text-align:center; margin-top: 0;">Reset your password</h2>
 
-            $default        = 'Please enter code for reset your password: $verify_code';
-            $body           = data_get($emailTemplate, 'body', $default);
-            $altBody        = data_get($emailTemplate, 'alt_body', $default);
+            <p style="text-align:center; font-size:16px; color:#444; margin: 20px 0;">
+            We received a request to reset your password. Use the code below to proceed:
+            </p>
 
-            $mail->Body     = str_replace('$verify_code', $str, $body);
-            $mail->AltBody  = str_replace('$verify_code', $str, $altBody);
+            <div style="text-align:center; margin: 30px 0;">
+            <span style="display:inline-block; padding:12px 28px; background:#38bdf8; color:#ffffff; font-size:20px; font-weight:bold; border-radius:6px;">
+                $verify_code
+            </span>
+            </div>
+            HTML;
 
+            // Default plain text fallback
+            $defaultAlt = "Reset your password\n\nUse this code to reset your password: $verify_code";
+
+            $bodyTemplate = data_get($emailTemplate, 'body', $defaultHtml);
+            $altTemplate  = data_get($emailTemplate, 'alt_body', $defaultAlt);
+
+            $bodyWithCode = str_replace('$verify_code', $resetCode, $bodyTemplate);
+            $altWithCode  = str_replace('$verify_code', $resetCode, $altTemplate);
+
+            $mail->Subject = $resetCode . " - Reset Your Password";
+            $mail->Body    = $this->wrapEmailLayout($bodyWithCode);
+            $mail->AltBody = $altWithCode;
+            $mail->isHTML(true);
+
+            // Handle attachments (same logic)
             if (!empty(data_get($emailTemplate, 'galleries'))) {
                 foreach ($emailTemplate->galleries as $gallery) {
-                    /** @var Gallery $gallery */
                     try {
                         $mail->addAttachment(request()->getHttpHost() . '/storage/' . $gallery->path);
                     } catch (Throwable) {
@@ -245,12 +266,13 @@ class EmailSendService extends CoreService
             ]);
             $this->error($e);
             return [
-                'message'   => $mail->ErrorInfo,
-                'status'    => false,
-                'code'      => ResponseError::ERROR_504,
+                'message' => $mail->ErrorInfo,
+                'status'  => false,
+                'code'    => ResponseError::ERROR_504,
             ];
         }
     }
+
 
     /**
      * @param Order $order
