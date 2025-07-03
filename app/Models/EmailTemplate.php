@@ -50,11 +50,13 @@ class EmailTemplate extends Model
     const TYPE_ORDER        = 'order';
     const TYPE_SUBSCRIBE    = 'subscribe';
     const TYPE_VERIFY       = 'verify';
+    const TYPE_RESET_PASSWORD = 'reset_password';
 
     const TYPES = [
         self::TYPE_ORDER        => self::TYPE_ORDER,
         self::TYPE_SUBSCRIBE    => self::TYPE_SUBSCRIBE,
         self::TYPE_VERIFY       => self::TYPE_VERIFY,
+        self::TYPE_RESET_PASSWORD => self::TYPE_RESET_PASSWORD,
     ];
 
     public function emailSetting(): BelongsTo

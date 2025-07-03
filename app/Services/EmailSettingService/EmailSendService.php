@@ -206,7 +206,7 @@ class EmailSendService extends CoreService
     }
     public function sendEmailPasswordReset(User $user, $str): array
     {
-        $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
+        $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_RESET_PASSWORD)->first();
 
         $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
 
@@ -223,7 +223,7 @@ class EmailSendService extends CoreService
 
             <div style="text-align:center; margin: 30px 0;">
             <span style="display:inline-block; padding:12px 28px; background:#38bdf8; color:#ffffff; font-size:20px; font-weight:bold; border-radius:6px;">
-                $verify_code
+                $resetCode
             </span>
             </div>
             HTML;
