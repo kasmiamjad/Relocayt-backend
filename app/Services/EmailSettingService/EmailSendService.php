@@ -204,7 +204,6 @@ class EmailSendService extends CoreService
             </html>
             HTML;
     }
-
     public function sendEmailPasswordReset(User $user, $str): array
     {
         $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
@@ -230,7 +229,7 @@ class EmailSendService extends CoreService
             HTML;
 
             // Default plain text fallback
-            $defaultAlt = "Reset your password\n\nUse this code to reset your password: $verify_code";
+            $defaultAlt = "Reset your password\n\nUse this code to reset your password: $resetCode";
 
             $bodyTemplate = data_get($emailTemplate, 'body', $defaultHtml);
             $altTemplate  = data_get($emailTemplate, 'alt_body', $defaultAlt);
@@ -273,6 +272,52 @@ class EmailSendService extends CoreService
         }
     }
 
+    public function sendEmailPasswordReset_old(User $user, $str): array
+    {
+        $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
+
+        $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
+
+        try {
+
+            $mail->Subject  = data_get($emailTemplate, 'subject', 'Reset password');
+
+            $default        = 'Please enter code for reset your password: $verify_code';
+            $body           = data_get($emailTemplate, 'body', $default);
+            $altBody        = data_get($emailTemplate, 'alt_body', $default);
+
+            $mail->Body     = str_replace('$verify_code', $str, $body);
+            $mail->AltBody  = str_replace('$verify_code', $str, $altBody);
+
+            if (!empty(data_get($emailTemplate, 'galleries'))) {
+                foreach ($emailTemplate->galleries as $gallery) {
+                    /** @var Gallery $gallery */
+                    try {
+                        $mail->addAttachment(request()->getHttpHost() . '/storage/' . $gallery->path);
+                    } catch (Throwable) {
+                        Log::error($mail->ErrorInfo);
+                    }
+                }
+            }
+
+            $mail->send();
+
+            return [
+                'status' => true,
+                'code' => ResponseError::NO_ERROR,
+            ];
+        } catch (Exception $e) {
+            Log::error('ErrorInfo', [
+                $mail->ErrorInfo
+            ]);
+            $this->error($e);
+            return [
+                'message'   => $mail->ErrorInfo,
+                'status'    => false,
+                'code'      => ResponseError::ERROR_504,
+            ];
+        }
+    }
 
     /**
      * @param Order $order
