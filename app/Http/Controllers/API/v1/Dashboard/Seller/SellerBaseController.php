@@ -17,10 +17,6 @@ abstract class SellerBaseController extends Controller
     public function __construct()
     {
         parent::__construct();
-        Log::info('✅ SellerBaseController __construct');
-        Log::info('🧑 Authenticated user:', [auth('sanctum')->user()]);
-        Log::info('🏪 Related shop:', [auth('sanctum')->user()?->shop]);
-
         $this->middleware('check.shop')
             ->except('shopCreate', 'shopShow', 'shopUpdate');
 
