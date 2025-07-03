@@ -241,19 +241,20 @@ class EmailSendService extends CoreService
             $mail->Body    = $this->wrapEmailLayout($bodyWithCode);
             $mail->AltBody = $altWithCode;
             $mail->isHTML(true);
+            $mail->SMTPDebug = 2; // Verbose debug output (set to 0 in production)
+            $mail->Debugoutput = function($str, $level) {
+                Log::debug("SMTP [$level]: $str");
+            };
+            Log::info('Password reset email body', [
+                'body' => $mail->Body,
+                'alt' => $mail->AltBody
+            ]);
 
-            // Handle attachments (same logic)
-            if (!empty(data_get($emailTemplate, 'galleries'))) {
-                foreach ($emailTemplate->galleries as $gallery) {
-                    try {
-                        $mail->addAttachment(request()->getHttpHost() . '/storage/' . $gallery->path);
-                    } catch (Throwable) {
-                        Log::error($mail->ErrorInfo);
-                    }
-                }
+            if (!$mail->send()) {
+                Log::error('Password reset email failed', ['error' => $mail->ErrorInfo]);
+            } else {
+                Log::info('Password reset email sent successfully to ' . $user->email);
             }
-
-            $mail->send();
 
             return [
                 'status' => true,
