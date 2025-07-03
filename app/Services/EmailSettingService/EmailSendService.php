@@ -245,15 +245,15 @@ class EmailSendService extends CoreService
             $mail->Debugoutput = function($str, $level) {
                 Log::debug("SMTP [$level]: $str");
             };
-            Log::info('Password reset email body', [
-                'body' => $mail->Body,
-                'alt' => $mail->AltBody
-            ]);
+            // Log::info('Password reset email body', [
+            //     'body' => $mail->Body,
+            //     'alt' => $mail->AltBody
+            // ]);
 
             if (!$mail->send()) {
                 Log::error('Password reset email failed', ['error' => $mail->ErrorInfo]);
             } else {
-                Log::info('Password reset email sent successfully to ' . $user->email);
+                //Log::info('Password reset email sent successfully to ' . $user->email);
             }
 
             return [
