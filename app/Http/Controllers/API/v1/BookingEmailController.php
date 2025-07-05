@@ -12,7 +12,21 @@ class BookingEmailController extends Controller
 
     public function send(Request $request)
     {
-        return response()->json(['message' => 'Controller reached.']);
-    }
+        $data = $request->validate([
+            'serviceMasterId' => 'required|integer',
+            'shopSlug' => 'nullable|string',
+            'totalPrice' => 'required|numeric',
+            'nightCount' => 'required|integer',
+            'dateRange.from' => 'required|date',
+            'dateRange.to' => 'required|date',
+        ]);
 
+        $result = $this->emailService->sendBookingInterestEmail($data);
+
+        if (!$result['status']) {
+            return response()->json(['message' => $result['message']], 500);
+        }
+
+        return response()->json(['message' => 'Booking email sent successfully.']);
+    }
 }
