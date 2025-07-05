@@ -22,7 +22,7 @@ use App\Http\Controllers\Api\V1\BookingEmailController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::middleware([])->post('v1/rest/send-booking-email', [BookingEmailController::class, 'send']);
+
 
 Route::get('/test-shop', [ShopController::class, 'paginate']);
 Route::get('/debug-log-test', function () {
@@ -93,13 +93,16 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     Route::post('/auth/forgot/password',                [LoginController::class, 'forgetPassword'])
         ->middleware('sessions');
 
+    Route::post('/auth/forgot/password',                [LoginController::class, 'forgetPassword'])
+        ->middleware('sessions');
+
     Route::post('/auth/forgot/password/before',        [LoginController::class, 'forgetPasswordBefore'])
         ->middleware('sessions');
 
     Route::post('/auth/forgot/password/confirm',        [LoginController::class, 'forgetPasswordVerify'])
         ->middleware('sessions');
-
-    Route::post('/auth/forgot/email-password',          [LoginController::class, 'forgetPasswordEmail'])
+        
+    Route::post('/auth/email/send-booking-email',          [BookingEmailController::class, 'send'])
         ->middleware('sessions');
 
     Route::post('/auth/forgot/email-password/{hash}',   [LoginController::class, 'forgetPasswordVerifyEmail'])
