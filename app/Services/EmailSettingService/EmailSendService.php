@@ -367,6 +367,63 @@ class EmailSendService extends CoreService
         }
     }
 
+    public function sendBookingInterestEmail(array $data): array
+    {
+        try {
+            $emailSetting = EmailSetting::first();
+            $mail = new PHPMailer(true);
+
+            $mail->CharSet = 'UTF-8';
+            $mail->isSMTP();
+            $mail->SMTPAuth   = $emailSetting->smtp_auth;
+            $mail->Host       = $emailSetting->host;
+            $mail->Port       = $emailSetting->port;
+            $mail->Username   = $emailSetting->from_to;
+            $mail->Password   = $emailSetting->password;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->SMTPOptions = $emailSetting->ssl ?: [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
+
+            $mail->setFrom($emailSetting->from_to, $emailSetting->from_site);
+            $mail->addAddress('kasmi.amjad@gmail.com', 'Booking Admin');
+
+            $mail->Subject = 'New Booking Interest';
+
+            $html = "
+                <h2>New Booking Interest Submitted</h2>
+                <p><strong>Service ID:</strong> {$data['serviceMasterId']}</p>
+                <p><strong>Shop Slug:</strong> {$data['shopSlug']}</p>
+                <p><strong>Total Price:</strong> $ {$data['totalPrice']}</p>
+                <p><strong>Night Count:</strong> {$data['nightCount']}</p>
+                <p><strong>Date From:</strong> {$data['dateRange']['from']}</p>
+                <p><strong>Date To:</strong> {$data['dateRange']['to']}</p>
+            ";
+
+            $mail->Body = $this->wrapEmailLayout($html);
+            $mail->AltBody = strip_tags($html);
+            $mail->isHTML(true);
+            $mail->send();
+
+            return [
+                'status' => true,
+                'code' => ResponseError::NO_ERROR,
+            ];
+        } catch (Exception $e) {
+            \Log::error('Booking Email Error', ['message' => $e->getMessage()]);
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+                'code' => ResponseError::ERROR_504,
+            ];
+        }
+    }
+
+
     public function emailBaseAuth(?EmailSetting $emailSetting, User $user): PHPMailer
     {
 

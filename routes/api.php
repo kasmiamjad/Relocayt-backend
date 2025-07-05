@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\API\v1\Dashboard\Admin\ServiceController;
 use App\Http\Controllers\API\v1\Rest\ShopController;
+use App\Http\Controllers\Api\V1\BookingEmailController;
 
 /*
 |--------------------------------------------------------------------------
