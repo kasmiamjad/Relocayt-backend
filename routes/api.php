@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\BookingEmailController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::middleware([])->post('v1/rest/send-booking-email', [BookingEmailController::class, 'send']);
 
 Route::get('/test-shop', [ShopController::class, 'paginate']);
 Route::get('/debug-log-test', function () {
