@@ -23,9 +23,7 @@ use App\Http\Controllers\Api\V1\BookingEmailController;
 |
 */
 
-Route::middleware([])->post('/ping', function () {
-    return response()->json(['status' => 'POST ping successful!']);
-});
+Route::middleware([])->post('/ping',  [BookingEmailController::class, 'send']);
 
 Route::get('/test-shop', [ShopController::class, 'paginate']);
 Route::get('/debug-log-test', function () {
