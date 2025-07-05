@@ -23,6 +23,9 @@ use App\Http\Controllers\Api\V1\BookingEmailController;
 |
 */
 
+Route::middleware([])->post('/ping', function () {
+    return response()->json(['status' => 'POST ping successful!']);
+});
 
 Route::get('/test-shop', [ShopController::class, 'paginate']);
 Route::get('/debug-log-test', function () {
@@ -101,7 +104,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 
     Route::post('/auth/forgot/password/confirm',        [LoginController::class, 'forgetPasswordVerify'])
         ->middleware('sessions');
-        
+
     Route::post('/auth/email/send-booking-email',          [BookingEmailController::class, 'send'])
         ->middleware('sessions');
 
