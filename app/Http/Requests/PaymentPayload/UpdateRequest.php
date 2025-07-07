@@ -15,9 +15,7 @@ class UpdateRequest extends BaseRequest
      */
     public function rules(): array
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
+        
         return [
             'payload' => 'required|array',
             'payload.*' => ['required']

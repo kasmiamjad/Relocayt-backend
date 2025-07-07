@@ -27,10 +27,7 @@ class ShopImport implements ToCollection, WithHeadingRow, WithBatchInserts
      */
     public function collection(Collection $collection)
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
-
+     
         foreach ($collection as $row) {
 
             $type = !empty(data_get($row, 'type')) ?

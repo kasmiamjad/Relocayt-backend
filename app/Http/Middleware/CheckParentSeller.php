@@ -27,9 +27,7 @@ class CheckParentSeller
      */
     public function handle(Request $request, Closure $next): JsonResponse
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
+        
 
         if (!auth('sanctum')->check()) {
             return $this->onErrorResponse(['code' => ResponseError::ERROR_100]);

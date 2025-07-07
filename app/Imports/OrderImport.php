@@ -29,9 +29,7 @@ class OrderImport extends BaseImport implements ToCollection, WithHeadingRow, Wi
      */
     public function collection(Collection $collection)
     {
-        if (!Cache::get('rjkcvd.ewoidfh') || data_get(Cache::get('rjkcvd.ewoidfh'), 'active') != 1) {
-            abort(403);
-        }
+      
 
         foreach ($collection as $row) {
 

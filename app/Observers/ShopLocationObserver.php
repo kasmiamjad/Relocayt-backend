@@ -21,13 +21,13 @@ class ShopLocationObserver
      */
     public function creating(ShopLocation $shopLocation): void
     {
-        $s = Cache::get('rjkcvd.ewoidfh');
+        // $s = Cache::get('rjkcvd.ewoidfh');
 
-        Cache::flush();
+        // Cache::flush();
 
-        try {
-            Cache::set('rjkcvd.ewoidfh', $s);
-        } catch (Throwable|InvalidArgumentException) {}
+        // try {
+        //     Cache::set('rjkcvd.ewoidfh', $s);
+        // } catch (Throwable|InvalidArgumentException) {}
     }
 
     /**
@@ -38,13 +38,13 @@ class ShopLocationObserver
      */
     public function created(ShopLocation $shopLocation): void
     {
-        $s = Cache::get('rjkcvd.ewoidfh');
+        // $s = Cache::get('rjkcvd.ewoidfh');
 
-        Cache::flush();
+        // Cache::flush();
 
-        try {
-            Cache::set('rjkcvd.ewoidfh', $s);
-        } catch (Throwable|InvalidArgumentException) {}
+        // try {
+        //     Cache::set('rjkcvd.ewoidfh', $s);
+        // } catch (Throwable|InvalidArgumentException) {}
 
     }
 
@@ -56,13 +56,13 @@ class ShopLocationObserver
      */
     public function updated(ShopLocation $shopLocation): void
     {
-        $s = Cache::get('rjkcvd.ewoidfh');
+        // $s = Cache::get('rjkcvd.ewoidfh');
 
-        Cache::flush();
+        // Cache::flush();
 
-        try {
-            Cache::set('rjkcvd.ewoidfh', $s);
-        } catch (Throwable|InvalidArgumentException) {}
+        // try {
+        //     Cache::set('rjkcvd.ewoidfh', $s);
+        // } catch (Throwable|InvalidArgumentException) {}
     }
 
     /**
@@ -73,13 +73,13 @@ class ShopLocationObserver
      */
     public function deleted(ShopLocation $shopLocation): void
     {
-        $s = Cache::get('rjkcvd.ewoidfh');
+        // $s = Cache::get('rjkcvd.ewoidfh');
 
-        Cache::flush();
+        // Cache::flush();
 
-        try {
-            Cache::set('rjkcvd.ewoidfh', $s);
-        } catch (Throwable|InvalidArgumentException) {}
+        // try {
+        //     Cache::set('rjkcvd.ewoidfh', $s);
+        // } catch (Throwable|InvalidArgumentException) {}
     }
 
 }

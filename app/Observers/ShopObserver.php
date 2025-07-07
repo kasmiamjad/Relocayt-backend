@@ -37,13 +37,13 @@ class ShopObserver
      */
     public function created(Shop $shop): void
     {
-        $s = Cache::get('rjkcvd.ewoidfh');
+        // $s = Cache::get('rjkcvd.ewoidfh');
 
-        Cache::flush();
+        // Cache::flush();
 
-        try {
-            Cache::set('rjkcvd.ewoidfh', $s);
-        } catch (Throwable|InvalidArgumentException) {}
+        // try {
+        //     Cache::set('rjkcvd.ewoidfh', $s);
+        // } catch (Throwable|InvalidArgumentException) {}
 
         (new ModelLogService)->logging($shop, $shop->getAttributes(), 'created');
 
@@ -69,13 +69,13 @@ class ShopObserver
             $shop->seller?->invitations()?->delete();
         }
 
-        $s = Cache::get('rjkcvd.ewoidfh');
+        // $s = Cache::get('rjkcvd.ewoidfh');
 
-        Cache::flush();
+        // Cache::flush();
 
-        try {
-            Cache::set('rjkcvd.ewoidfh', $s);
-        } catch (Throwable|InvalidArgumentException) {}
+        // try {
+        //     Cache::set('rjkcvd.ewoidfh', $s);
+        // } catch (Throwable|InvalidArgumentException) {}
 
         (new ModelLogService)->logging($shop, $shop->getAttributes(), 'updated');
     }
@@ -88,13 +88,13 @@ class ShopObserver
      */
     public function deleted(Shop $shop): void
     {
-        $s = Cache::get('rjkcvd.ewoidfh');
+        // $s = Cache::get('rjkcvd.ewoidfh');
 
-        Cache::flush();
+        // Cache::flush();
 
-        try {
-            Cache::set('rjkcvd.ewoidfh', $s);
-        } catch (Throwable|InvalidArgumentException) {}
+        // try {
+        //     Cache::set('rjkcvd.ewoidfh', $s);
+        // } catch (Throwable|InvalidArgumentException) {}
 
         try {
             DB::table('stories')->where('shop_id', $shop->id)->delete();
