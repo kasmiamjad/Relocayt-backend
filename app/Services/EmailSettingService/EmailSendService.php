@@ -367,14 +367,34 @@ class EmailSendService extends CoreService
         }
     }
 
-    public function sendBookingInterestEmail(array $data, User $user): array
+    public function sendBookingInterestEmail(array $data): array
     {
         try {
-            $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_RESET_PASSWORD)->first();
+            $emailSetting = EmailSetting::first();
+            $mail = new PHPMailer(true);
 
-            $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
+            $mail->CharSet = 'UTF-8';
+            $mail->isSMTP();
+            $mail->SMTPAuth   = $emailSetting->smtp_auth;
+            $mail->Host       = $emailSetting->host;
+            $mail->Port       = $emailSetting->port;
+            $mail->Username   = $emailSetting->from_to;
+            $mail->Password   = $emailSetting->password;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->SMTPOptions = $emailSetting->ssl ?: [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
 
-            $defaultHtml = "
+            $mail->setFrom($emailSetting->from_to, $emailSetting->from_site);
+            $mail->addAddress('kasmi.amjad@gmail.com', 'Booking Admin');
+
+            $mail->Subject = 'New Booking Interest';
+
+            $html = "
                 <h2>New Booking Interest Submitted</h2>
                 <p><strong>Service ID:</strong> {$data['serviceMasterId']}</p>
                 <p><strong>Shop Slug:</strong> {$data['shopSlug']}</p>
@@ -384,32 +404,15 @@ class EmailSendService extends CoreService
                 <p><strong>Date To:</strong> {$data['dateRange']['to']}</p>
             ";
 
-
-            // Default plain text fallback
-            $defaultAlt = "New Booking Interest Submitted";
-
-            $bodyTemplate = data_get($emailTemplate, 'body', $defaultHtml);
-            $altTemplate  = data_get($emailTemplate, 'alt_body', $defaultAlt);
-
-            $mail->Subject = "New Booking Interest";
-            $mail->Body    = $this->wrapEmailLayout($bodyWithCode);
-            $mail->AltBody = $altWithCode;
+            $mail->Body = $this->wrapEmailLayout($html);
+            $mail->AltBody = strip_tags($html);
             $mail->isHTML(true);
-            $mail->SMTPDebug = 2; // Verbose debug output (set to 0 in production)
-            $mail->Debugoutput = function($str, $level) {
-                Log::debug("SMTP [$level]: $str");
-            };
-            // Log::info('Password reset email body', [
-            //     'body' => $mail->Body,
-            //     'alt' => $mail->AltBody
-            // ]);
+            $mail->send();
 
-            if (!$mail->send()) {
-                Log::error('Password reset email failed', ['error' => $mail->ErrorInfo]);
-            } else {
-                //Log::info('Password reset email sent successfully to ' . $user->email);
-            }
-
+            return [
+                'status' => true,
+                'code' => ResponseError::NO_ERROR,
+            ];
         } catch (Exception $e) {
             \Log::error('Booking Email Error', ['message' => $e->getMessage()]);
             return [
