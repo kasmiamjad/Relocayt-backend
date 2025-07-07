@@ -400,7 +400,7 @@ class EmailSendService extends CoreService
                 ],
             ];
 
-            $mail->setFrom($emailSetting->from_to, $emailSetting->from_site);
+            $mail->setFrom("no-reply@relocayt.ca", $emailSetting->from_site);
             $mail->addAddress('kasmi.amjad@gmail.com', 'Booking Admin');
 
             $mail->Subject = 'New Booking Interest';
