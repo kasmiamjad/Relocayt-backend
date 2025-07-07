@@ -370,7 +370,18 @@ class EmailSendService extends CoreService
     public function sendBookingInterestEmail(array $data): array
     {
         try {
-            $emailSetting = EmailSetting::first();
+            $emailSetting = EmailSetting::find(3);
+
+            if (!$emailSetting) {
+                \Log::error('EmailSetting with ID 3 not found.');
+                return [
+                    'status' => false,
+                    'message' => 'Email settings not found.',
+                    'code' => ResponseError::ERROR_404,
+                ];
+            }
+
+            \Log::info('Loaded EmailSetting ID 3:', $emailSetting->toArray());
             $mail = new PHPMailer(true);
 
             $mail->CharSet = 'UTF-8';
