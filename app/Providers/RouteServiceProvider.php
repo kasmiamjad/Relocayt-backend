@@ -51,16 +51,16 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function configureRateLimiting(): void
     {
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(5000)->by(optional($request->user())->id ?: $request->ip())
-                ->response(function () use ($request) {
-                    $ips = collect(Cache::get('block-ips'));
-                    Cache::set('block-ips', $ips->merge([$request->ip()]), 86600000000);
-                    Cache::remember('throttle', 900, function () use ($request) {
-                        Http::get('https://api.telegram.org/bot' . env('TELEGRAM_BOT_TOKEN') . '/sendMessage?chat_id=-1001570078412&text=Throttle. id:' . $request->user()?->id . ' ip:' . $request->ip() . 'addr:' . request()->server('SERVER_ADDR'));
-                    });
-                    return $this->errorResponse(ResponseError::ERROR_429, 'errors.' . ResponseError::ERROR_429);
-                });
-        });
+        // RateLimiter::for('api', function (Request $request) {
+        //     return Limit::perMinute(5000)->by(optional($request->user())->id ?: $request->ip())
+        //         ->response(function () use ($request) {
+        //             $ips = collect(Cache::get('block-ips'));
+        //             Cache::set('block-ips', $ips->merge([$request->ip()]), 86600000000);
+        //             Cache::remember('throttle', 900, function () use ($request) {
+        //                 Http::get('https://api.telegram.org/bot' . env('TELEGRAM_BOT_TOKEN') . '/sendMessage?chat_id=-1001570078412&text=Throttle. id:' . $request->user()?->id . ' ip:' . $request->ip() . 'addr:' . request()->server('SERVER_ADDR'));
+        //             });
+        //             return $this->errorResponse(ResponseError::ERROR_429, 'errors.' . ResponseError::ERROR_429);
+        //         });
+        // });
     }
 }
