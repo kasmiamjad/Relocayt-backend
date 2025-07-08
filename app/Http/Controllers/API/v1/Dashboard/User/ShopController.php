@@ -43,7 +43,7 @@ class ShopController extends UserBaseController
     }
     public function shopDraftSave(Request $request)
     {
-        $user = auth()->user();
+        $user = auth('sanctum')->user();
 
         $validated = $request->validate([
             'step' => 'required|integer|min:0|max:4',
@@ -61,7 +61,7 @@ class ShopController extends UserBaseController
 
     public function shopDraftShow(Request $request)
     {
-        $user = auth()->user();
+        $user = auth('sanctum')->user();
 
         $draft = \App\Models\ShopDraft::where('user_id', $user->id)->first();
 
