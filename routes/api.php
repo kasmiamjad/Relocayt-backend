@@ -416,7 +416,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             /* Shop */
             Route::post('shops',                                [Seller\ShopController::class, 'shopCreate']);
             Route::get('shops',                                 [Seller\ShopController::class, 'shopShow']);
-            Route::put('shops',                                 [User\ShopController::class, 'shopUpdate']);
+            Route::put('shops',                                 [Seller\ShopController::class, 'shopUpdate']);
             Route::post('shops/draft',                          [User\ShopController::class, 'shopDraftSave']);
             Route::get('shops/draft',                           [User\ShopController::class, 'shopDraftShow']);
 
