@@ -9,6 +9,7 @@ use App\Http\Resources\ShopResource;
 use App\Models\Shop;
 use App\Services\ShopServices\ShopReviewService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ShopController extends UserBaseController
 {
