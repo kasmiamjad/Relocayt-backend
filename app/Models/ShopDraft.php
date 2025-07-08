@@ -8,4 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class ShopDraft extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['user_id', 'data', 'step'];
+
+    protected $casts = [
+        'data' => 'array',
+    ];
 }
