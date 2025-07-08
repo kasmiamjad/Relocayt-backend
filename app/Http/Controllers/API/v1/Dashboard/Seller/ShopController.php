@@ -151,5 +151,39 @@ class ShopController extends SellerBaseController
     {
         //
     }
+    public function shopDraftSave(Request $request)
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'step' => 'required|integer|min:0|max:4',
+            'data' => 'required|array',
+        ]);
+
+        // Save or update the draft (assuming one draft per user)
+        $draft = \App\Models\ShopDraft::updateOrCreate(
+            ['user_id' => $user->id],
+            ['data' => $validated['data'], 'step' => $validated['step']]
+        );
+
+        return response()->json(['message' => 'Draft saved', 'draft' => $draft]);
+    }
+
+    public function shopDraftShow(Request $request)
+    {
+        $user = auth()->user();
+
+        $draft = \App\Models\ShopDraft::where('user_id', $user->id)->first();
+
+        if (!$draft) {
+            return response()->json(['message' => 'No draft found'], 404);
+        }
+
+        return response()->json([
+            'step' => $draft->step,
+            'data' => $draft->data,
+        ]);
+    }
+
 
 }

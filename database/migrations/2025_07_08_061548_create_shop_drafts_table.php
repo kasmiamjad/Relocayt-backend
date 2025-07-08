@@ -15,9 +15,13 @@ class CreateShopDraftsTable extends Migration
     {
         Schema::create('shop_drafts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->json('data');
+            $table->tinyInteger('step')->default(0);
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

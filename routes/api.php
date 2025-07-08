@@ -23,7 +23,7 @@ use App\Http\Controllers\API\v1\BookingEmailController;
 |
 */
 
-Route::middleware([])->post('/ping',  [BookingEmailController::class, 'send']);
+Route::middleware([])->post('/send-booking-email',  [BookingEmailController::class, 'send']);
 
 Route::get('/test-shop', [ShopController::class, 'paginate']);
 Route::get('/debug-log-test', function () {
@@ -417,6 +417,9 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             Route::post('shops',                                [Seller\ShopController::class, 'shopCreate']);
             Route::get('shops',                                 [Seller\ShopController::class, 'shopShow']);
             Route::put('shops',                                 [Seller\ShopController::class, 'shopUpdate']);
+            Route::post('shops/draft',                          [Seller\ShopController::class, 'shopDraftSave']);
+            Route::get('shops/draft',                           [Seller\ShopController::class, 'shopDraftShow']);
+
 
             /* RequestModel */
             Route::apiResource('request-models',		User\RequestModelController::class);
