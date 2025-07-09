@@ -29,8 +29,8 @@ class ServiceMasterController extends MasterBaseController
      */
     public function index(FilterParamsRequest $request): AnonymousResourceCollection
     {
-        $models = $this->repository->paginate($request->merge(['master_id' => auth('sanctum')->id()])->all());
-
+        // $models = $this->repository->paginate($request->merge(['master_id' => auth('sanctum')->id()])->all());
+        $models = $this->repository->paginate($request->all());
         return ServiceMasterResource::collection($models);
     }
 
