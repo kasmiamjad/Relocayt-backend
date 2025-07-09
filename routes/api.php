@@ -499,7 +499,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         });
 
         // MASTER BLOCK
-        Route::group(['prefix' => 'master', 'middleware' => ['sanctum.check', 'role:master'], 'as' => 'user.'], function () {
+        Route::group(['prefix' => 'master', 'middleware' => ['sanctum.check'], 'as' => 'master.'], function () {
 
             /* Service */
             Route::apiResource('services', Master\ServiceController::class)->only(['index', 'show']);
