@@ -17,13 +17,19 @@ class ServiceMasterRepository extends CoreRepository
 
     public function paginate(array $filter): LengthAwarePaginator
     {
+        $query = ServiceMaster::query();
+
+        if (!empty($filter['shop_id'])) {
+            $query->where('shop_id', $filter['shop_id']); // ✅ fixed
+        }
+
         $column = $filter['column'] ?? 'id';
 
         if ($column !== 'id') {
             $column = Schema::hasColumn('service_masters', $column) ? $column : 'id';
         }
 
-        return $this->model()
+        return $query
             ->with([
                 'master:id,firstname,lastname',
                 'service:id,slug,category_id',
@@ -35,6 +41,7 @@ class ServiceMasterRepository extends CoreRepository
             ->orderBy($column, $filter['sort'] ?? 'desc')
             ->paginate($filter['perPage'] ?? 10);
     }
+
 
     public function show(ServiceMaster $model): ServiceMaster
     {
