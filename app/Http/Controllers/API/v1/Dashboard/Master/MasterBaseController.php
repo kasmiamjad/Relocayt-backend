@@ -13,6 +13,6 @@ abstract class MasterBaseController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->middleware(['sanctum.check', 'role:master']);
+        $this->middleware(['sanctum.check']);
     }
 }
