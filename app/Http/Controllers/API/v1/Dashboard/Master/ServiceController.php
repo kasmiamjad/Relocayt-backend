@@ -24,11 +24,13 @@ class ServiceController extends MasterBaseController
         /** @var User $user */
         $user = auth('sanctum')->user();
 
-        $this->shopIds = $user
-            ?->invitations
-            ?->where('status', Invitation::ACCEPTED)
-            ?->pluck('shop_id')
-            ?->toArray() ?? [];
+        $this->shopIds = $user && $user->hasRole('master')
+            ? [] // no filtering for master
+            : $user
+                ?->invitations
+                ?->where('status', Invitation::ACCEPTED)
+                ?->pluck('shop_id')
+                ?->toArray() ?? [];
     }
 
     /**
@@ -39,7 +41,11 @@ class ServiceController extends MasterBaseController
      */
     public function index(FilterParamsRequest $request): AnonymousResourceCollection
     {
-        $filter = $request->merge(['shop_ids' => $this->shopIds])->all();
+        $filter = $request->all();
+
+        if (!empty($this->shopIds)) {
+            $filter['shop_ids'] = $this->shopIds;
+        }
 
         $models = $this->repository->paginate($filter);
 
