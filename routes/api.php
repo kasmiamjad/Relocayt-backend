@@ -506,6 +506,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 
             /* Service Master */
             Route::apiResource('service-masters', Master\ServiceMasterController::class);
+            Route::get('service-masters/{master}/properties', [ServiceMasterController::class, 'propertiesByMaster']);
+
             Route::delete('service-masters/delete', [Master\ServiceMasterController::class, 'destroy']);
 
             /* Service Master Notifications */

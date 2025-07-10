@@ -108,6 +108,22 @@ class ServiceMasterController extends MasterBaseController
         );
     }
 
+    public function propertiesByMaster($masterId): JsonResponse
+    {
+        $properties = DB::table('property')
+            ->where('master_id', $masterId)
+            ->get();
+
+        if ($properties->isEmpty()) {
+            return $this->onErrorResponse([
+                'code'    => ResponseError::ERROR_404,
+                'message' => 'No properties found for this master.',
+            ]);
+        }
+
+        return $this->successResponse('Properties retrieved successfully.', $properties);
+    }
+
     /**
      * Remove the specified resource from storage.
      *
