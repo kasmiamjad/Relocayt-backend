@@ -14,6 +14,7 @@ use App\Services\ServiceMasterService\ServiceMasterService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Repositories\ServiceMasterRepository\ServiceMasterRepository;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class ServiceMasterController extends MasterBaseController
 {
