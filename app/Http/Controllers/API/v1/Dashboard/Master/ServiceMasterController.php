@@ -13,6 +13,7 @@ use App\Http\Requests\ServiceMaster\UpdateRequest;
 use App\Services\ServiceMasterService\ServiceMasterService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Repositories\ServiceMasterRepository\ServiceMasterRepository;
+use Illuminate\Support\Facades\Log;
 
 class ServiceMasterController extends MasterBaseController
 {
@@ -108,21 +109,38 @@ class ServiceMasterController extends MasterBaseController
         );
     }
 
+    
+
     public function propertiesByMaster($masterId): JsonResponse
     {
-        $properties = DB::table('property')
-            ->where('master_id', $masterId)
-            ->get();
+        try {
+            $properties = DB::table('property')
+                ->where('master_id', $masterId)
+                ->get();
 
-        if ($properties->isEmpty()) {
-            return $this->onErrorResponse([
-                'code'    => ResponseError::ERROR_404,
-                'message' => 'No properties found for this master.',
+            if ($properties->isEmpty()) {
+                return $this->onErrorResponse([
+                    'code'    => ResponseError::ERROR_404,
+                    'message' => 'No properties found for this master.',
+                ]);
+            }
+
+            return $this->successResponse('Properties retrieved successfully.', $properties);
+
+        } catch (\Throwable $e) {
+            Log::error('Error fetching properties by master_id', [
+                'master_id' => $masterId,
+                'error'     => $e->getMessage(),
             ]);
-        }
 
-        return $this->successResponse('Properties retrieved successfully.', $properties);
+            return response()->json([
+                'status' => false,
+                'message' => 'Server error. Please check logs.',
+                'error' => $e->getMessage(), // optional for debugging
+            ], 500);
+        }
     }
+
 
     /**
      * Remove the specified resource from storage.
