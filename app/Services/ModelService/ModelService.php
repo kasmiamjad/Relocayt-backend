@@ -29,9 +29,14 @@ class ModelService extends CoreService
         try {
             $model = DB::transaction(function () use ($data) {
                  \Log::info('🧪 Service creation payload:', $data); // <- add this
+                $createData = collect($data)->except([
+                    'title', 'description', 'address', 'button_text', 'term'
+                ])->toArray();
+
+                $model = $this->model()->create($createData);
 
                 /** @var Service $model */
-                $model = $this->model()->create($data);
+                //$model = $this->model()->create($data);
 
                 (new ShopService)->updateShopPrices($model);
 
