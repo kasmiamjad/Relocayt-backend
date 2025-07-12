@@ -145,7 +145,7 @@ class ServiceMasterController extends MasterBaseController
             // Fetch document images
             $property->documents = DB::table('galleries')
                 ->where('loadable_type', 'App\\Models\\Shop')
-                ->where('loadable_id', $property->id)
+                ->where('loadable_id', $property->host_id)
                 ->where('type', 'shop-documents')
                 ->pluck('path');
 
