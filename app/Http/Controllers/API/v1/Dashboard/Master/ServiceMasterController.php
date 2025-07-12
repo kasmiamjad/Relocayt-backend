@@ -233,40 +233,40 @@ class ServiceMasterController extends MasterBaseController
             }
 
             // ✅ Sync gallery images
-            DB::table('galleries')
-                ->where('loadable_type', 'App\\Models\\Shop')
-                ->where('loadable_id', $propertyId)
-                ->where('type', 'shop')
-                ->delete();
+            // DB::table('galleries')
+            //     ->where('loadable_type', 'App\\Models\\Shop')
+            //     ->where('loadable_id', $propertyId)
+            //     ->where('type', 'shop')
+            //     ->delete();
 
-            foreach ($data['galleryImages'] as $url) {
-                DB::table('galleries')->insert([
-                    'loadable_type' => 'App\\Models\\Shop',
-                    'loadable_id'   => $propertyId,
-                    'type'          => 'shop',
-                    'path'          => $url,
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ]);
-            }
+            // foreach ($data['galleryImages'] as $url) {
+            //     DB::table('galleries')->insert([
+            //         'loadable_type' => 'App\\Models\\Shop',
+            //         'loadable_id'   => $propertyId,
+            //         'type'          => 'shop',
+            //         'path'          => $url,
+            //         'created_at'    => now(),
+            //         'updated_at'    => now(),
+            //     ]);
+            // }
 
-            // ✅ Sync document images
-            DB::table('galleries')
-                ->where('loadable_type', 'App\\Models\\Shop')
-                ->where('loadable_id', $propertyId)
-                ->where('type', 'shop-documents')
-                ->delete();
+            // // ✅ Sync document images
+            // DB::table('galleries')
+            //     ->where('loadable_type', 'App\\Models\\Shop')
+            //     ->where('loadable_id', $propertyId)
+            //     ->where('type', 'shop-documents')
+            //     ->delete();
 
-            foreach ($data['documents'] as $url) {
-                DB::table('galleries')->insert([
-                    'loadable_type' => 'App\\Models\\Shop',
-                    'loadable_id'   => $propertyId,
-                    'type'          => 'shop-documents',
-                    'path'          => $url,
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ]);
-            }
+            // foreach ($data['documents'] as $url) {
+            //     DB::table('galleries')->insert([
+            //         'loadable_type' => 'App\\Models\\Shop',
+            //         'loadable_id'   => $propertyId,
+            //         'type'          => 'shop-documents',
+            //         'path'          => $url,
+            //         'created_at'    => now(),
+            //         'updated_at'    => now(),
+            //     ]);
+            // }
 
             return $this->successResponse('Property updated successfully.');
 
