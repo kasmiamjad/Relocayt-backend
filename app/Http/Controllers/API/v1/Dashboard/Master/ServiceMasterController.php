@@ -126,6 +126,29 @@ class ServiceMasterController extends MasterBaseController
                 ]);
             }
 
+            // Attach amenities to each property
+            foreach ($properties as $property) {
+                $property->amenities = DB::table('amenity_property')
+                    ->join('amenities', 'amenity_property.amenity_id', '=', 'amenities.id')
+                    ->where('amenity_property.property_id', $property->id)
+                    ->select('amenities.id as amenity_id', 'amenities.name', 'amenities.icon') // adjust fields as needed
+                    ->get();
+            }
+
+            // Fetch gallery images
+            $property->galleryImages = DB::table('galleries')
+                ->where('loadable_type', 'App\\Models\\Shop')
+                ->where('loadable_id', $property->id)
+                ->where('type', 'shop')
+                ->pluck('path'); // just get array of URLs
+
+            // Fetch document images
+            $property->documents = DB::table('galleries')
+                ->where('loadable_type', 'App\\Models\\Shop')
+                ->where('loadable_id', $property->id)
+                ->where('type', 'shop-documents')
+                ->pluck('path');
+
             return $this->successResponse('Properties retrieved successfully.', $properties);
 
         } catch (\Throwable $e) {
@@ -137,10 +160,11 @@ class ServiceMasterController extends MasterBaseController
             return response()->json([
                 'status' => false,
                 'message' => 'Server error. Please check logs.',
-                'error' => $e->getMessage(), // optional for debugging
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
+
 
 
     /**
