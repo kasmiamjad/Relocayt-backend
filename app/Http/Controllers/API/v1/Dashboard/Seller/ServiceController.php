@@ -115,7 +115,9 @@ class ServiceController extends SellerBaseController
      */
     public function show(Service $service): JsonResponse
     {
-        \Log::info("Requesting service ID: {$service->id}, shop_id: {$service->shop_id}, user shop_id: {$this->shop->id}");
+      
+        $service = Service::findOrFail($this->shop->id);
+          \Log::info("Requesting service ID: {$service->id}, shop_id: {$service->shop_id}, user shop_id: {$this->shop->id}");
         if ($service->shop_id !== $this->shop->id) {
             return $this->onErrorResponse([
                 'code'    => ResponseError::ERROR_404,
