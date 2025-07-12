@@ -7,5 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceDraft extends Model
 {
-    use HasFactory;
+    protected $fillable = ['user_id', 'data', 'step'];
+
+    protected $casts = [
+        'data' => 'array',
+    ];
 }
