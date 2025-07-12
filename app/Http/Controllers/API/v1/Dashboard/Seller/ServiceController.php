@@ -15,6 +15,7 @@ use App\Repositories\ServiceRepository\ServiceRepository;
 use App\Services\ModelService\ModelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
 
 class ServiceController extends SellerBaseController
 {
@@ -47,6 +48,7 @@ class ServiceController extends SellerBaseController
         $validated = $request->validated();
         $validated['shop_id'] = $this->shop->id;
         unset($validated['commission_fee']);
+        \Log::info('🧪 Incoming validated data:', $validated);
         $result = $this->service->create($validated);
 
         if (!data_get($result, 'status')) {

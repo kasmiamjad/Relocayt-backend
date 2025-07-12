@@ -13,6 +13,7 @@ use App\Traits\SetTranslations;
 use DB;
 use Exception;
 use Throwable;
+use Illuminate\Support\Facades\Log;
 
 class ModelService extends CoreService
 {
@@ -27,6 +28,7 @@ class ModelService extends CoreService
     {
         try {
             $model = DB::transaction(function () use ($data) {
+                 \Log::info('🧪 Service creation payload:', $data); // <- add this
 
                 /** @var Service $model */
                 $model = $this->model()->create($data);
