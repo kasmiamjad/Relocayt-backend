@@ -285,6 +285,38 @@ class ServiceMasterController extends MasterBaseController
     }
 
 
+    public function serviceDraftSave(Request $request)
+    {
+        $user = auth('sanctum')->user();
+
+        $validated = $request->validate([
+            'step' => 'required|integer|min:0|max:4',
+            'data' => 'required|array',
+        ]);
+
+        $draft = \App\Models\ServiceDraft::updateOrCreate(
+            ['user_id' => $user->id],
+            ['data' => $validated['data'], 'step' => $validated['step']]
+        );
+
+        return response()->json(['message' => 'Draft saved', 'draft' => $draft]);
+    }
+
+    public function serviceDraftShow()
+    {
+        $user = auth('sanctum')->user();
+
+        $draft = \App\Models\ServiceDraft::where('user_id', $user->id)->first();
+
+        if (!$draft) {
+            return response()->json(['message' => 'No draft found'], 404);
+        }
+
+        return response()->json([
+            'step' => $draft->step,
+            'data' => $draft->data,
+        ]);
+    }
 
 
     /**

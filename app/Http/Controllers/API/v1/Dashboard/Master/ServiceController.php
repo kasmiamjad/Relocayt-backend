@@ -66,4 +66,5 @@ class ServiceController extends MasterBaseController
             ServiceResource::make($this->repository->show($service))
         );
     }
+    
 }
