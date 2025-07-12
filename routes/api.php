@@ -508,9 +508,9 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             /* Service Master */
             Route::apiResource('service-masters', Master\ServiceMasterController::class);
 
-            Route::prefix('v1/dashboard/master/service-masters')->group(function () {
-                Route::get('{masterId}/properties', [PropertyController::class, 'propertiesByMaster']);
-                Route::put('{masterId}/properties', [PropertyController::class, 'updateProperty']); // ✅ New
+            Route::prefix('service-masters')->group(function () {
+                Route::get('{master}/properties', [PropertyController::class, 'propertiesByMaster']);
+                Route::put('{master}/properties', [PropertyController::class, 'updateProperty']); // ✅ New
             });
 
             // Route::get('service-masters/{master}/properties', [ServiceMasterController::class, 'propertiesByMaster']);
