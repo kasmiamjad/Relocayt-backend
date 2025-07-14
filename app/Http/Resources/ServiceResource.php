@@ -55,6 +55,23 @@ class ServiceResource extends JsonResource
             'commission_fee'    => $this->when($this->rate_commission_fee,  $this->rate_commission_fee),
             'img'               => $this->when($img,                        $img),
             'data'              => $this->when($this->data,                 $this->data),
+            'title'         => $this->getTranslations('title'),
+            'description'   => $this->getTranslations('description'),
+            'address'       => ['en' => $this->address],
+            'street'        => $this->when($this->street, $this->street),
+            'city'          => $this->when($this->city, $this->city),
+            'state'         => $this->when($this->state, $this->state),
+            'zipcode'       => $this->when($this->zipcode, $this->zipcode),
+            'country'       => $this->when($this->country, $this->country),
+
+            'lat_long' => [
+                'latitude'  => $this->when($this->latitude, $this->latitude),
+                'longitude' => $this->when($this->longitude, $this->longitude),
+            ],
+
+            'galleryImages' => $this->when($this->gallery, $this->gallery ?? []),
+            'documents'     => $this->when($this->documents, $this->documents ?? []),
+
             'gender'            => $this->when($this->gender,               $this->gender),
             'created_at'        => $this->when($this->created_at,  $this->created_at?->format('Y-m-d H:i:s') . 'Z'),
             'updated_at'        => $this->when($this->updated_at,  $this->updated_at?->format('Y-m-d H:i:s') . 'Z'),
