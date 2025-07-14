@@ -514,6 +514,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 
                 Route::get('drafts/service', [ServiceMasterController::class, 'serviceDraftShow']);
                 Route::post('drafts/service', [ServiceMasterController::class, 'serviceDraftSave']);
+                Route::delete('drafts/service', [ServiceMasterController::class, 'serviceDraftDelete']);
+
             });
 
             // Route::get('service-masters/{master}/properties', [ServiceMasterController::class, 'propertiesByMaster']);
