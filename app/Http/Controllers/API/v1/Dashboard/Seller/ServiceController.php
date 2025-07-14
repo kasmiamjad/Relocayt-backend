@@ -32,10 +32,16 @@ class ServiceController extends SellerBaseController
      */
     public function index(FilterParamsRequest $request): AnonymousResourceCollection
     {
-        $models = $this->repository->paginate($request->merge(['shop_id' => $this->shop->id])->all());
+        $filters = $request->merge([
+            'shop_id' => $this->shop->id,
+            'type'    => 'online',
+        ])->all();
+
+        $models = $this->repository->paginate($filters);
 
         return ServiceResource::collection($models);
     }
+
 
     /**
      * Store a newly created resource in storage.
