@@ -75,15 +75,14 @@ class ModelService extends CoreService
                     ]);
                 }
 
-                // Upload gallery
                 if (data_get($data, 'galleryImages')) {
-                    $model->uploads(data_get($data, 'galleryImages'), 'gallery');
+                    $model->gallery = data_get($data, 'galleryImages');
                 }
 
-                // Upload documents
                 if (data_get($data, 'documents')) {
-                    $model->uploads(data_get($data, 'documents'), 'documents');
+                    $model->documents = data_get($data, 'documents');
                 }
+
 
                  $model->save(); // save once
 
