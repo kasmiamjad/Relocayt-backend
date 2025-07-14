@@ -60,7 +60,7 @@ class ServiceRepository extends CoreRepository
 
             try {
                 return $this->model()
-                    // ->filter($filter) // comment out to isolate cause
+                    ->filter($filter) // comment out to isolate cause
                     ->with([
                         'translation' => fn($q) => $q->where('locale', $this->language),
                     ])
