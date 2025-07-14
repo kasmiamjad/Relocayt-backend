@@ -36,10 +36,12 @@ class ServiceMasterRepository extends CoreRepository
                 'service.translation' => fn($q) => $q
                     ->select('id', 'service_id', 'locale', 'title')
                     ->where('locale', $this->language),
+                'shop:id,id,logo_img,background_img' // ✅ join shop for images
             ])
             ->filter($filter)
             ->orderBy($column, $filter['sort'] ?? 'desc')
             ->paginate($filter['perPage'] ?? 10);
+
     }
 
 
