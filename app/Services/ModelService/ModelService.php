@@ -85,6 +85,13 @@ class ModelService extends CoreService
                     $model->uploads(data_get($data, 'documents'), 'documents');
                 }
 
+                 $model->save(); // save once
+
+                // Optional: handle uploads if needed
+                if (data_get($data, 'images')) {
+                    $model->uploads($data['images']);
+                }
+
                 return $model;
             });
 
