@@ -35,11 +35,19 @@ class StoreRequest extends BaseRequest
             'data'              => 'array',
             'images'            => 'array',
             'images.*'          => 'string',
+
+            // ✅ Add these
+            'galleryImages'     => 'nullable|array',
+            'galleryImages.*'   => 'string|url',
+            'documents'         => 'nullable|array',
+            'documents.*'       => 'string|url',
+
             'title'             => 'required|array',
             'title.*'           => 'required|string|min:2|max:191',
             'description'       => 'array',
             'description.*'     => 'string|min:2',
         ];
     }
+
 }
 
