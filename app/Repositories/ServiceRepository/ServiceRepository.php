@@ -52,30 +52,36 @@ class ServiceRepository extends CoreRepository
     }
 
     public function paginate(array $filter): \Illuminate\Contracts\Pagination\LengthAwarePaginator
-        {
-            Log::info('🧪 Starting paginate()', [
-                'filter' => $filter,
-                'language' => $this->language
+    {
+        Log::info('🧪 Starting paginate()', [
+            'filter' => $filter,
+            'language' => $this->language
+        ]);
+
+        try {
+            return $this->model()
+                ->when(isset($filter['shop_id']), fn($q) =>
+                    $q->where('shop_id', $filter['shop_id'])
+                )
+                ->when(isset($filter['type']) && $filter['type'] === 'online', fn($q) =>
+                    $q->where('type', 'online')
+                )
+                ->with([
+                    'translation' => fn($q) => $q->where('locale', $this->language),
+                ])
+                ->orderBy('id', 'desc')
+                ->paginate($filter['perPage'] ?? 10);
+
+        } catch (\Throwable $e) {
+            Log::error('🔥 paginate() error: ' . $e->getMessage(), [
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
             ]);
-
-            try {
-                return $this->model()
-                    ->filter($filter) // comment out to isolate cause
-                    ->with([
-                        'translation' => fn($q) => $q->where('locale', $this->language),
-                    ])
-                    ->orderBy('id', 'desc')
-                    ->paginate($filter['perPage'] ?? 10);
-
-            } catch (\Throwable $e) {
-                Log::error('🔥 paginate() error: ' . $e->getMessage(), [
-                    'line' => $e->getLine(),
-                    'file' => $e->getFile(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                abort(500, 'Paginate crash: ' . $e->getMessage());
-            }
+            abort(500, 'Paginate crash: ' . $e->getMessage());
         }
+    }
+
 
 
     public function show(Service $model): Service
