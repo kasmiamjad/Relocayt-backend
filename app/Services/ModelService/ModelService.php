@@ -28,23 +28,61 @@ class ModelService extends CoreService
     {
         try {
             $model = DB::transaction(function () use ($data) {
-                 \Log::info('🧪 Service creation payload:', $data); // <- add this
-                $createData = collect($data)->except([
-                    'title', 'description', 'address', 'button_text', 'term'
+                \Log::info('🧪 Service creation payload:', $data);
+
+                // Coordinates
+                $latitude = data_get($data, 'lat_long.latitude');
+                $longitude = data_get($data, 'lat_long.longitude');
+
+                // Main fields to insert
+                $createData = collect($data)->only([
+                    'category_id',
+                    'shop_id',
+                    'status',
+                    'commission_fee',
+                    'interval',
+                    'pause',
+                    'type',
+                    'service_type',
+                    'gender',
+                    'price',
+                ])->merge([
+                    'address'   => data_get($data, 'address.en'),
+                    'description' => data_get($data, 'description.en'),
+                    'title'     => data_get($data, 'title.en'),
+                    'street'    => data_get($data, 'street'),
+                    'city'      => data_get($data, 'city'),
+                    'state'     => data_get($data, 'state'),
+                    'zipcode'   => data_get($data, 'zipcode'),
+                    'country'   => data_get($data, 'country'),
+                    'latitude'  => $latitude,
+                    'longitude' => $longitude,
                 ])->toArray();
 
+                /** @var Service $model */
                 $model = $this->model()->create($createData);
 
-                /** @var Service $model */
-                //$model = $this->model()->create($data);
-
+                // Update shop price fields if needed
                 (new ShopService)->updateShopPrices($model);
 
+                // Translations
                 $this->setTranslations($model, $data);
 
-                if ($model && data_get($data, 'images.0')) {
-                    $model->update(['img' => data_get($data, 'previews.0') ?? data_get($data, 'images.0')]);
-                    $model->uploads(data_get($data, 'images'));
+                // Cover image
+                if (data_get($data, 'previews.0') || data_get($data, 'images.0')) {
+                    $model->update([
+                        'img' => data_get($data, 'previews.0') ?? data_get($data, 'images.0'),
+                    ]);
+                }
+
+                // Upload gallery
+                if (data_get($data, 'galleryImages')) {
+                    $model->uploads(data_get($data, 'galleryImages'), 'gallery');
+                }
+
+                // Upload documents
+                if (data_get($data, 'documents')) {
+                    $model->uploads(data_get($data, 'documents'), 'documents');
                 }
 
                 return $model;
@@ -52,9 +90,11 @@ class ModelService extends CoreService
 
             return ['status' => true, 'code' => ResponseError::NO_ERROR, 'data' => $model];
         } catch (Throwable $e) {
+            \Log::error("Service Creation Failed: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return ['status' => false, 'code' => ResponseError::ERROR_400, 'message' => $e->getMessage()];
         }
     }
+
 
     /**
      * @param int $id
