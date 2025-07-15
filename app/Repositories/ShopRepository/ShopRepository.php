@@ -95,41 +95,45 @@ class  ShopRepository extends CoreRepository
 
        $service = Service::query();
 
-        return $service
-            ->where('type', 'online')
-            ->whereHas('shop', fn($q) => $q->where('status', 'approved')) // optional filter
-            ->with([
-                'translation' => fn($q) => $q->where('locale', $this->language),
+        return $shop
+    ->with([
+        'translation' => fn($q) => $q->where('locale', $this->language),
 
-                'shop' => fn($q) => $q->select([
-                    'id',
-                    'uuid',
-                    'slug',
-                    'logo_img',
-                    'background_img',
-                    'latitude',
-                    'longitude',
-                    'status',
-                    'type',
-                    'delivery_time',
-                    'delivery_type',
-                    'open',
-                    'visibility',
-                    'verify',
-                    'r_count',
-                    'r_avg',
-                    'min_price',
-                    'max_price',
-                    'service_min_price',
-                    'service_max_price',
-                ]),
+        // Only eager-load services of type 'online'
+        'services' => fn($q) => $q->where('type', 'online'),
 
-                'shop.translation' => fn($q) => $q->where('locale', $this->language),
+        'services.translation' => fn($q) => $q->where('locale', $this->language),
 
-                'serviceExtras.translation' => fn($q) => $q->where('locale', $this->language)
-                                                        ->select('id', 'service_extra_id', 'title', 'locale'),
-            ])
-            ->paginate($filter['perPage'] ?? 10);
+        'services.serviceExtras.translation' => fn($q) => $q
+            ->where('locale', $this->language)
+            ->select('id', 'service_extra_id', 'title', 'locale'),
+
+        'closedDates',
+        'workingDays',
+    ])
+    ->select([
+        'id',
+        'uuid',
+        'slug',
+        'logo_img',
+        'background_img',
+        'status',
+        'type',
+        'delivery_time',
+        'delivery_type',
+        'open',
+        'visibility',
+        'verify',
+        'r_count',
+        'r_avg',
+        'min_price',
+        'max_price',
+        'service_min_price',
+        'service_max_price',
+        'latitude',
+        'longitude',
+    ])
+    ->paginate($filter['perPage'] ?? 10);
 
 
     }
