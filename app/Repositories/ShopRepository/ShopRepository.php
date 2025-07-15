@@ -94,41 +94,40 @@ class  ShopRepository extends CoreRepository
         $longitude = data_get($filter, 'address.longitude');
 
         return $shop
-        ->with([
-        'translation' => fn($q) => $q->where('locale', $this->language),
-        'services' => fn($q) => $q->where('type', 'online')
-                                  ->select('*')
-                                  ->from('services')
-                                  ->whereRaw('services.shop_id = id')
-                                  ->take(3),
-            'services.translation' => fn($q) => $q->where('locale', $this->language),
-            'services.serviceExtras.translation' => fn($q) => $q->where('locale', $this->language)->select('id', 'service_extra_id', 'title', 'locale'),
-            'closedDates',
-            'workingDays',
-        ])
-        ->select([
-            'id',
-            'uuid',
-            'slug',
-            'logo_img',
-            'background_img',
-            'status',
-            'type',
-            'delivery_time',
-            'delivery_type',
-            'open',
-            'visibility',
-            'verify',
-            'r_count',
-            'r_avg',
-            'min_price',
-            'max_price',
-            'service_min_price',
-            'service_max_price',
-            'latitude',
-            'longitude',
-        ])
-        ->paginate($filter['perPage'] ?? 10);
+            ->whereHas('services', fn($q) => $q->where('type', 'online'))
+            ->with([
+                'translation' => fn($q) => $q->where('locale', $this->language),
+                'services' => fn($q) => $q->where('type', 'online')->take(3),
+                'services.translation' => fn($q) => $q->where('locale', $this->language),
+                'services.serviceExtras.translation' => fn($q) => $q->where('locale', $this->language)
+                                                                ->select('id', 'service_extra_id', 'title', 'locale'),
+                'closedDates',
+                'workingDays',
+            ])
+            ->select([
+                'id',
+                'uuid',
+                'slug',
+                'logo_img',
+                'background_img',
+                'status',
+                'type',
+                'delivery_time',
+                'delivery_type',
+                'open',
+                'visibility',
+                'verify',
+                'r_count',
+                'r_avg',
+                'min_price',
+                'max_price',
+                'service_min_price',
+                'service_max_price',
+                'latitude',
+                'longitude',
+            ])
+            ->paginate($filter['perPage'] ?? 10);
+
 
     }
 
