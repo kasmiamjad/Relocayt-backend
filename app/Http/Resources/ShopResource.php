@@ -110,7 +110,6 @@ class ShopResource extends JsonResource
                     'description'      => $this->property->description ?? null,
                     'logo_img'         => $this->property->logo_img ?? null,
                     'background_img'   => $this->property->background_img ?? null,
-                    // ✅ New key: amenities
                     'amenities'        => $this->property->amenities ?? [],
                 ] : null
         ];
