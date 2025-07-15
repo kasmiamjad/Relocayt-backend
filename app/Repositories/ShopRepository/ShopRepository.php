@@ -94,7 +94,7 @@ class  ShopRepository extends CoreRepository
         $longitude = data_get($filter, 'address.longitude');
 
         return $shop
-    ->with([
+        ->with([
         'translation' => fn($q) => $q->where('locale', $this->language),
         'services' => fn($q) => $q->where('type', 'online')
                                   ->select('*')
