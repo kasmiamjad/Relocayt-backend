@@ -94,9 +94,13 @@ class  ShopRepository extends CoreRepository
         $longitude = data_get($filter, 'address.longitude');
 
         return $shop
-        ->with([
-            'translation' => fn($q) => $q->where('locale', $this->language),
-            'services' => fn($q) => $q->select('*')->from('services')->whereRaw('services.shop_id = id')->take(3),
+    ->with([
+        'translation' => fn($q) => $q->where('locale', $this->language),
+        'services' => fn($q) => $q->where('type', 'online')
+                                  ->select('*')
+                                  ->from('services')
+                                  ->whereRaw('services.shop_id = id')
+                                  ->take(3),
             'services.translation' => fn($q) => $q->where('locale', $this->language),
             'services.serviceExtras.translation' => fn($q) => $q->where('locale', $this->language)->select('id', 'service_extra_id', 'title', 'locale'),
             'closedDates',
@@ -125,6 +129,7 @@ class  ShopRepository extends CoreRepository
             'longitude',
         ])
         ->paginate($filter['perPage'] ?? 10);
+
     }
 
     /**
