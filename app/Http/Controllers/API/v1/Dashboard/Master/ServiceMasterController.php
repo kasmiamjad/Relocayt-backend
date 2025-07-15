@@ -16,6 +16,7 @@ use App\Repositories\ServiceMasterRepository\ServiceMasterRepository;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Models\ServiceDraft;
 
 class ServiceMasterController extends MasterBaseController
 {
@@ -36,22 +37,7 @@ class ServiceMasterController extends MasterBaseController
         $models = $this->repository->paginate($request->all());
         return ServiceMasterResource::collection($models);
     }
-    public function serviceDraftDelete()
-    {
-        $user = auth('sanctum')->user();
-
-        // Assuming you're storing the draft in a `service_drafts` table related to the user/shop
-        $draft = ServiceDraft::where('user_id', $user->id)->first();
-
-        if ($draft) {
-            $draft->delete();
-            return response()->json(['message' => 'Draft deleted successfully']);
-        }
-
-        return response()->json(['message' => 'No draft found'], 404);
-    }
-
-
+    
     /**
      * Store a newly created resource in storage.
      *
@@ -331,6 +317,21 @@ class ServiceMasterController extends MasterBaseController
             'step' => $draft->step,
             'data' => $draft->data,
         ]);
+    }
+
+    public function serviceDraftDelete()
+    {
+        $user = auth('sanctum')->user();
+
+        $draft = ServiceDraft::where('user_id', $user->id)->first();
+
+        if (!$draft) {
+            return response()->json(['message' => "Item's not found."], 404);
+        }
+
+        $draft->delete();
+
+        return response()->json(['message' => "Draft deleted successfully."]);
     }
 
 
