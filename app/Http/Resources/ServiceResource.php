@@ -52,6 +52,7 @@ class ServiceResource extends JsonResource
             'interval'          => $this->when($this->interval,             $this->interval),
             'pause'             => $this->when($this->pause,                $this->pause),
             'type'              => $this->when($this->type,                 $this->type),
+            'service_type' => $this->when($this->service_type, $this->service_type),
             'commission_fee'    => $this->when($this->rate_commission_fee,  $this->rate_commission_fee),
             'img'               => $this->when($img,                        $img),
             'data'              => $this->when($this->data,                 $this->data),
