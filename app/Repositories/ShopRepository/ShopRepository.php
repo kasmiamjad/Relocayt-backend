@@ -100,14 +100,7 @@ class  ShopRepository extends CoreRepository
             ->whereHas('shop', fn($q) => $q->where('status', 'approved')) // optional filter
             ->with([
                 'translation' => fn($q) => $q->where('locale', $this->language),
-                'services.translation' => fn($q) => $q->where('locale', $this->language),
-
-                'services.serviceExtras.translation' => fn($q) => $q
-                    ->where('locale', $this->language)
-                    ->select('id', 'service_extra_id', 'title', 'locale'),
-
-                'closedDates',
-                'workingDays',
+                
                 'shop' => fn($q) => $q->select([
                     'id',
                     'uuid',
