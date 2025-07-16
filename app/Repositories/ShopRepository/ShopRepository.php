@@ -94,13 +94,15 @@ class  ShopRepository extends CoreRepository
         $longitude = data_get($filter, 'address.longitude');
 
        return $shop
-    // only shops that have at least one service with type = 'online'
-    ->whereHas('services', fn($q) => $q->where('type', 'online'))
-
+    ->whereHas('services', function ($q) {
+        $q->where('type', 'online');
+    })
     ->with([
         'translation' => fn($q) => $q->where('locale', $this->language),
 
-        'services' => fn($q) => $q->where('type', 'online'),
+        'services' => fn($q) => $q
+            ->where('type', 'online')
+            ->whereHas('translation', fn($q) => $q->where('locale', $this->language)),
 
         'services.translation' => fn($q) => $q->where('locale', $this->language),
 
@@ -134,6 +136,7 @@ class  ShopRepository extends CoreRepository
         'longitude',
     ])
     ->paginate($filter['perPage'] ?? 10);
+
 
 
     }
