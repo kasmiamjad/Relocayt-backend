@@ -77,7 +77,6 @@ class ServiceRepository extends CoreRepository
                 ->with([
                     'translation' => fn($q) => $q->where('locale', $this->language),
                     'category.translation' => fn($q) => $q->where('locale', $this->language),
-                    'tags.translation'     => fn($q) => $q->where('locale', $this->language),
                     'user:id,firstname,lastname,avatar',
                     'media',
                     'service_extras.translation' => fn($q) => $q->where('locale', $this->language),
@@ -96,7 +95,6 @@ class ServiceRepository extends CoreRepository
             abort(500, 'Paginate crash: ' . $e->getMessage());
         }
     }
-
 
 
 
