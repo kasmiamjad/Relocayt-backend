@@ -64,6 +64,7 @@ class ServiceResource extends JsonResource
             'state'         => $this->when($this->state, $this->state),
             'zipcode'       => $this->when($this->zipcode, $this->zipcode),
             'country'       => $this->when($this->country, $this->country),
+            'content' => $this->when($this->content, $this->content),
 
             'lat_long' => [
                 'latitude'  => $this->when($this->latitude, $this->latitude),
