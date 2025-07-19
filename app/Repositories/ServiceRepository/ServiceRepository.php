@@ -60,6 +60,14 @@ class ServiceRepository extends CoreRepository
 
         try {
             return $this->model()
+                ->select([
+                    'id', 'slug', 'category_id', 'shop_id', 'status', 'status_note',
+                    'img', 'price', 'commission_fee', 'interval', 'pause',
+                    'type', 'discount', 'data', 'gender', 'service_type',
+                    'title', 'description', 'latitude', 'longitude',
+                    'address', 'street', 'city', 'state', 'zipcode', 'country',
+                    'gallery', 'documents', 'created_at', 'updated_at'
+                ])
                 ->when(isset($filter['shop_id']), fn($q) =>
                     $q->where('shop_id', $filter['shop_id'])
                 )
@@ -68,6 +76,13 @@ class ServiceRepository extends CoreRepository
                 )
                 ->with([
                     'translation' => fn($q) => $q->where('locale', $this->language),
+                    'category.translation' => fn($q) => $q->where('locale', $this->language),
+                    'tags.translation'     => fn($q) => $q->where('locale', $this->language),
+                    'user:id,firstname,lastname,avatar',
+                    'media',
+                    'service_extras.translation' => fn($q) => $q->where('locale', $this->language),
+                    'service_durations',
+                    'service_bookings',
                 ])
                 ->orderBy('id', 'desc')
                 ->paginate($filter['perPage'] ?? 10);
@@ -81,6 +96,7 @@ class ServiceRepository extends CoreRepository
             abort(500, 'Paginate crash: ' . $e->getMessage());
         }
     }
+
 
 
 
