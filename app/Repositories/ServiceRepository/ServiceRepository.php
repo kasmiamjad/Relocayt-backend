@@ -77,10 +77,7 @@ class ServiceRepository extends CoreRepository
                 ->with([
                     'translation' => fn($q) => $q->where('locale', $this->language),
                     'category.translation' => fn($q) => $q->where('locale', $this->language),
-                    'media',
                     'service_extras.translation' => fn($q) => $q->where('locale', $this->language),
-                    'service_durations',
-                    'service_bookings',
                 ])
                 ->orderBy('id', 'desc')
                 ->paginate($filter['perPage'] ?? 10);
