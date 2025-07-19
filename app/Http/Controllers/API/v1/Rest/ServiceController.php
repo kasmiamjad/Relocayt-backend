@@ -29,9 +29,10 @@ class ServiceController extends RestBaseController
     {
         Log::info('Reached ServiceController@index');
         $models = $this->repository->paginate($request->merge(['has_master' => true])->all());
-                Log::info('First service content:', [
+        Log::info('First service content:', [
             'content' => $models->first()->content
         ]);
+
 
         return ServiceResource::collection($models);
     }

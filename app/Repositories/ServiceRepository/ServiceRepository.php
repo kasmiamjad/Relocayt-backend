@@ -64,7 +64,7 @@ class ServiceRepository extends CoreRepository
                     'id', 'slug', 'category_id', 'shop_id', 'status', 'status_note',
                     'img', 'price', 'commission_fee', 'interval', 'pause',
                     'type', 'discount', 'data', 'gender', 'service_type',
-                    'title', 'description', 'latitude', 'longitude',
+                    'title', 'description', 'latitude', 'longitude', 'content',
                     'address', 'street', 'city', 'state', 'zipcode', 'country',
                     'gallery', 'documents', 'created_at', 'updated_at'
                 ])
