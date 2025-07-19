@@ -71,6 +71,9 @@ class ServiceRepository extends CoreRepository
                 ->when(isset($filter['shop_id']), fn($q) =>
                     $q->where('shop_id', $filter['shop_id'])
                 )
+                ->when(isset($filter['serviceId']), fn($q) =>
+                    $q->where('id', $filter['serviceId'])
+                )
                 ->when(isset($filter['type']) && $filter['type'] === 'online', fn($q) =>
                     $q->where('type', 'online')
                 )
