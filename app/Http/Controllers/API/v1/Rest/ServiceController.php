@@ -29,7 +29,7 @@ class ServiceController extends RestBaseController
     {
         Log::info('Reached ServiceController@index');
         $models = $this->repository->paginate($request->merge(['has_master' => true])->all());
-        Log::info('Service full dump', $models->first()->toArray());
+        //Log::info('Service full dump', $models->first()->toArray());
 
         return ServiceResource::collection($models);
     }

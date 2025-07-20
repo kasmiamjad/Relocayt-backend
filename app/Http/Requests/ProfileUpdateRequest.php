@@ -49,13 +49,13 @@ class ProfileUpdateRequest extends BaseRequest
             'country'                           => 'nullable|string|max:255',
             'province'                          => 'nullable|string|max:255',
             // Newly added columns
-            'address'                          => ['nullable', 'string'],
-            'linked_google'                    => ['boolean'],
-            'linked_facebook'           => ['boolean'],
-            'can_delete_profile'        => ['boolean'],
+            'address'                           => ['nullable', 'string'],
+            'linked_google'                     => ['boolean'],
+            'linked_facebook'                   => ['boolean'],
+            'can_delete_profile'                => ['boolean'],
 
-            'emergency_contact'         => ['nullable', 'string', 'max:255'],
-            'address_proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'emergency_contact'                 => ['nullable', 'string', 'max:255'],
+            'address_proof'                     => ['nullable', 'string'],
 
             'qualification_country'     => ['nullable', 'string', 'max:255'],
             'qualification_institution' => ['nullable', 'string', 'max:255'],
