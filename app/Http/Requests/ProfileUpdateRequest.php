@@ -55,8 +55,8 @@ class ProfileUpdateRequest extends BaseRequest
             'can_delete_profile'                => ['boolean'],
 
             'emergency_contact'                 => ['nullable', 'string', 'max:255'],
-            'address_proof'                     => ['nullable', 'string'],
-            'address_proof.*'                   => 'string',
+            'address_proof'                     => 'nullable|array',
+            'address_proof.*'                   => 'string|url',
 
             'qualification_country'     => ['nullable', 'string', 'max:255'],
             'qualification_institution' => ['nullable', 'string', 'max:255'],
