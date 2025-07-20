@@ -180,14 +180,14 @@ class ProfileController extends UserBaseController
    public function submitVerificationDocs(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'primary_doc' => 'required|array|min:1',
+            'primary_doc' => 'nullable|array|min:1',
             'primary_doc.*' => 'string|url',
-            'secondary_doc' => 'required|array|min:1',
+            'secondary_doc' => 'nullable|array|min:1',
             'secondary_doc.*' => 'string|url',
-            'consent' => 'required|boolean',
+            'consent' => 'nullable|boolean',
         ]);
 
-        $user = auth('sanctum')->user(); // Explicitly specify sanctum guard
+        $user = auth('sanctum')->user();
 
         if (!$user) {
             return response()->json([
@@ -195,22 +195,34 @@ class ProfileController extends UserBaseController
             ], 401);
         }
 
-        $user->update([
-            'verification_primary_docs' => json_encode($validated['primary_doc']),
-            'verification_secondary_docs' => json_encode($validated['secondary_doc']),
-            'verification_consent' => $validated['consent'],
-        ]);
+        $dataToUpdate = [];
+
+        if (array_key_exists('primary_doc', $validated)) {
+            $dataToUpdate['verification_primary_docs'] = json_encode($validated['primary_doc']);
+        }
+
+        if (array_key_exists('secondary_doc', $validated)) {
+            $dataToUpdate['verification_secondary_docs'] = json_encode($validated['secondary_doc']);
+        }
+
+        if (array_key_exists('consent', $validated)) {
+            $dataToUpdate['verification_consent'] = $validated['consent'];
+        }
+
+        if (empty($dataToUpdate)) {
+            return response()->json([
+                'message' => 'No verification data provided.',
+            ], 422);
+        }
+
+        $user->update($dataToUpdate);
 
         return response()->json([
             'message' => 'Verification documents submitted successfully.',
         ]);
     }
 
-
-
-
-
-    /**
+/**
      * Remove the specified resource from storage.
      *
      * @return JsonResponse
