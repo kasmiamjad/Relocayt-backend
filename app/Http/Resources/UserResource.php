@@ -67,6 +67,8 @@ class UserResource extends JsonResource
             'billing_info'               => $this->billing_info,
             'verification_status'        => $this->verification_status,
             'verification_documents'     => $this->verification_documents,
+            'verification_primary_docs'  => $this->verification_primary_docs,
+            'verification_secondary_docs'=> $this->verification_secondary_docs,
             'email_verified_at' => $this->when($this->email_verified_at,
                 $this->email_verified_at?->format('Y-m-d H:i:s') . 'Z'
             ),
