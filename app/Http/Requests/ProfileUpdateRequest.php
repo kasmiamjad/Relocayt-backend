@@ -56,6 +56,7 @@ class ProfileUpdateRequest extends BaseRequest
 
             'emergency_contact'                 => ['nullable', 'string', 'max:255'],
             'address_proof'                     => ['nullable', 'string'],
+            'address_proof.*'                   => 'string',
 
             'qualification_country'     => ['nullable', 'string', 'max:255'],
             'qualification_institution' => ['nullable', 'string', 'max:255'],
