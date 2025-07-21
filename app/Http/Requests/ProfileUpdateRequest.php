@@ -22,7 +22,7 @@ class ProfileUpdateRequest extends BaseRequest
                 Rule::unique('users', 'email')->ignore($uuid, 'uuid')
             ],
             'phone' => [
-                'numeric',
+                'nullable|numeric',
                 Rule::unique('users', 'phone')->ignore($uuid, 'uuid')
             ],
             'lastname'                          => 'nullable|string|max:255',

@@ -147,6 +147,7 @@ class ShopService extends CoreService
             }
             //Log::info('Successfully created master user', ['user_id' => $userId]);
             try {
+                $coverImage = data_get($data, 'coverImage');
                 $property = Property::create([
                     'master_id'        => $userId,
                     'host_id'          => $shop->id,
@@ -176,8 +177,8 @@ class ShopService extends CoreService
                     'check_in_time'    => data_get($data, 'check_in_time'),
                     'check_out_time'   => data_get($data, 'check_out_time'),
                     'instant_bookable' => data_get($data, 'instant_bookable'),
-                    'logo_img'         => data_get($data, 'images.0'),
-                    'background_img'   => data_get($data, 'images.0'),
+                    'logo_img'         => $coverImage,
+                    'background_img'   => $coverImage,
                     'status'           => 'inactive', // or 'active' as needed
                     'uuid'             => Str::uuid(),
                     'slug'             => Str::slug(data_get($data, 'title.en')) . '-' . rand(100,999),
