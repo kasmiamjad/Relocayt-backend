@@ -38,11 +38,15 @@ class ShopService extends CoreService
      * @return array
      */
 
-    protected function generateUniqueEmail($baseEmail): string
+    protected function generateUniqueEmail(string $baseEmail): string
     {
-        [$name, $domain] = explode('@', $baseEmail);
-        return $name . '+master@' . $domain; // e.g., john+master@example.com
+        $parts = explode('@', $baseEmail);
+        $prefix = $parts[0] ?? 'user';
+        $domain = $parts[1] ?? 'example.com';
+        $unique = $prefix . '+' . now()->format('YmdHis') . rand(100, 999);
+        return "$unique@$domain";
     }
+
 
     public function create(array $data): array
     {
@@ -60,6 +64,7 @@ class ShopService extends CoreService
             }
 
             if (isset($data['shop_id'])) {
+
                 $shop = Shop::find($data['shop_id']);
 
                 if (!$shop) {
