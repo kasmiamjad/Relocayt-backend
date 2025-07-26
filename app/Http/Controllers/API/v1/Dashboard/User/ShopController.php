@@ -10,6 +10,7 @@ use App\Models\Shop;
 use App\Services\ShopServices\ShopReviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Models\ShopDraft;
 
 class ShopController extends UserBaseController
 {
