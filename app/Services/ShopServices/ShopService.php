@@ -59,40 +59,53 @@ class ShopService extends CoreService
                 throw new Exception(__('errors.' . ResponseError::ERROR_207, locale: $this->language));
             }
 
-            $shop = Shop::where('user_id', $data['user_id'])->first();
+            if (isset($data['shop_id'])) {
+                $shop = Shop::find($data['shop_id']);
 
-            if (!empty($shop)) {
-                throw new Exception(__('errors.' . ResponseError::ERROR_206, locale: $this->language));
-            }
+                if (!$shop) {
+                    throw new Exception(__('errors.' . ResponseError::ERROR_404, locale: $this->language));
+                }
 
-            $authUser = auth()->user();
-            /** @var Shop $shop */
-            $shop = DB::transaction(function () use($data, $authUser) {
+                // Optional: Validate that shop belongs to user
+                if ($shop->user_id != $data['user_id']) {
+                    throw new Exception(__('errors.' . ResponseError::ERROR_207, locale: $this->language));
+                }
+            } else {
+                // ⚠️ No shop_id provided, proceed to create new shop
+                $existingShop = Shop::where('user_id', $data['user_id'])->first();
+                if ($existingShop) {
+                    throw new Exception(__('errors.' . ResponseError::ERROR_206, locale: $this->language));
+                }
 
+                $authUser = auth()->user();
                 /** @var Shop $shop */
-                $shop = $this->model()->create($this->setShopParams($data));
+                $shop = DB::transaction(function () use($data, $authUser) {
 
-                $this->setTranslations($shop, $data);
+                    /** @var Shop $shop */
+                    $shop = $this->model()->create($this->setShopParams($data));
 
-                if (data_get($data, 'images.0')) {
-                    $shop->update([
-                        'logo_img'       => data_get($data, 'images.0'),
-                        'background_img' => data_get($data, 'images.0'),
-                    ]);
-                    $shop->uploads(data_get($data, 'images'));
-                }
+                    $this->setTranslations($shop, $data);
 
-                if (data_get($data, 'documents.0')) {
-                    $shop->uploads(data_get($data, 'documents'), Gallery::SHOP_DOCUMENTS);
-                }
+                    if (data_get($data, 'images.0')) {
+                        $shop->update([
+                            'logo_img'       => data_get($data, 'images.0'),
+                            'background_img' => data_get($data, 'images.0'),
+                        ]);
+                        $shop->uploads(data_get($data, 'images'));
+                    }
 
-                if (data_get($data, 'tags.0')) {
-                    $shop->tags()->sync(data_get($data, 'tags', []));
-                }
+                    if (data_get($data, 'documents.0')) {
+                        $shop->uploads(data_get($data, 'documents'), Gallery::SHOP_DOCUMENTS);
+                    }
 
-                return $shop;
-            });
-   
+                    if (data_get($data, 'tags.0')) {
+                        $shop->tags()->sync(data_get($data, 'tags', []));
+                    }
+
+                    return $shop;
+                });
+            }
+            
             $response = app(\App\Services\UserServices\UserService::class)->create([
                 'firstname' => data_get($data, 'title.en', 'Master'),
                 'lastname'  => $seller->lastname,
