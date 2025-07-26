@@ -67,9 +67,9 @@ class ShopService extends CoreService
                 }
 
                 // Optional: Validate that shop belongs to user
-                if ($shop->user_id != $data['user_id']) {
-                    throw new Exception(__('errors.' . ResponseError::ERROR_207, locale: $this->language));
-                }
+                // if ($shop->user_id != $data['user_id']) {
+                //     throw new Exception(__('errors.' . ResponseError::ERROR_207, locale: $this->language));
+                // }
             } else {
                 // ⚠️ No shop_id provided, proceed to create new shop
                 $existingShop = Shop::where('user_id', $data['user_id'])->first();
@@ -105,7 +105,7 @@ class ShopService extends CoreService
                     return $shop;
                 });
             }
-            
+
             $response = app(\App\Services\UserServices\UserService::class)->create([
                 'firstname' => data_get($data, 'title.en', 'Master'),
                 'lastname'  => $seller->lastname,
