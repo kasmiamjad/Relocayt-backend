@@ -74,4 +74,14 @@ class ShopController extends UserBaseController
             'data' => $draft->data,
         ]);
     }
+    
+    public function destroy(Request $request)
+    {
+        $userId = auth('sanctum')->id();
+
+        ShopDraft::where('user_id', $userId)->delete();
+
+        return response()->json(['message' => 'Draft deleted successfully']);
+    }
+
 }

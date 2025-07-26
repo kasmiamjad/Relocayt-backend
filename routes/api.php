@@ -420,6 +420,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             Route::put('shops',                                 [Seller\ShopController::class, 'shopUpdate']);
             Route::post('shops/draft',                          [User\ShopController::class, 'shopDraftSave']);
             Route::get('shops/draft',                           [User\ShopController::class, 'shopDraftShow']);
+            Route::delete('shops/drafts',                       [User\ShopController::class, 'destroy']);
+
 
 
             /* RequestModel */
