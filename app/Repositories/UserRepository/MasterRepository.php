@@ -72,8 +72,6 @@ class MasterRepository extends CoreRepository
      */
     public function show(User $user): User
     {
-        
-
         return $user
             ->loadMin('serviceMasters', 'price')
             ->loadMissing([
@@ -85,14 +83,25 @@ class MasterRepository extends CoreRepository
                     ->where('locale', $this->language),
                 'translation' => fn($q) => $q
                     ->where('locale', $this->language),
+
+                // ✅ Load each user's service masters
                 'serviceMasters' => fn($q) => $q->where('active', true),
+
+                // ✅ Load related service
                 'serviceMasters.service:id,slug,category_id',
-                'serviceMasters.service.translation'=> fn($q) => $q
+                'serviceMasters.service.translation' => fn($q) => $q
                     ->where('locale', $this->language),
+
                 'serviceMasters.extras.translation' => fn($q) => $q
+                    ->where('locale', $this->language),
+
+                // ✅ Load property via serviceMaster.shop.property — correct linkage
+                'serviceMasters.shop.property',
+                'serviceMasters.shop.translation' => fn($q) => $q
                     ->where('locale', $this->language),
             ]);
     }
+
 
     /**
      * @param int $id
