@@ -19,6 +19,7 @@ use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class MasterRepository extends CoreRepository
 {
@@ -72,6 +73,7 @@ class MasterRepository extends CoreRepository
      */
     public function show(User $user): User
     {
+        Log::info('CHECK MASTER HHEREEEE.......');
         return $user
             ->loadMin('serviceMasters', 'price')
             ->loadMissing([
