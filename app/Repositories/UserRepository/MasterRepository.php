@@ -19,7 +19,6 @@ use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class MasterRepository extends CoreRepository
 {
@@ -35,8 +34,6 @@ class MasterRepository extends CoreRepository
      */
     public function index(array $filter = []): LengthAwarePaginator
     {
-        
-        Log::info('INDEXX MASTER HHEREEEE.......');
         return User::filter(array_merge($filter, ['role' => 'master']))
             ->whereHas('serviceMaster', fn($q) => $q
                 ->select('service_id', 'active', 'master_id')
@@ -55,10 +52,20 @@ class MasterRepository extends CoreRepository
                 'translation' => fn($q) => $q
                     ->where('locale', $this->language),
                 'translations',
+
+                // ✅ Load property via user->property, not shop
+                'property' => fn($q) => $q->select([
+                    'id', 'host_id', 'title', 'property_type', 'room_type', 'accommodates',
+                    'bedrooms', 'beds', 'bathrooms', 'price_per_night', 'currency',
+                    'check_in_time', 'check_out_time', 'instant_bookable',
+                    'latitude', 'longitude', 'description', 'logo_img', 'background_img',
+                ]),
+
                 'serviceMaster' => fn($q) => $q
                     ->where('active', true)
                     ->when(data_get($filter, 'service_id'), fn ($query, $id) => $query->where('service_id', $id))
                     ->when(data_get($filter, 'service_ids'), fn ($query, $ids) => $query->whereIn('service_id', $ids)),
+
                 'serviceMaster.service:id',
                 'serviceMaster.service.translation' => fn($q) => $q
                     ->where('locale', $this->language),
@@ -67,13 +74,15 @@ class MasterRepository extends CoreRepository
             ->paginate($filter['perPage'] ?? 10);
     }
 
+
     /**
      * @param User $user
      * @return User
      */
     public function show(User $user): User
     {
-        Log::info('CHECK MASTER HHEREEEE.......');
+        
+
         return $user
             ->loadMin('serviceMasters', 'price')
             ->loadMissing([
@@ -85,25 +94,14 @@ class MasterRepository extends CoreRepository
                     ->where('locale', $this->language),
                 'translation' => fn($q) => $q
                     ->where('locale', $this->language),
-
-                // ✅ Load each user's service masters
                 'serviceMasters' => fn($q) => $q->where('active', true),
-
-                // ✅ Load related service
                 'serviceMasters.service:id,slug,category_id',
-                'serviceMasters.service.translation' => fn($q) => $q
+                'serviceMasters.service.translation'=> fn($q) => $q
                     ->where('locale', $this->language),
-
                 'serviceMasters.extras.translation' => fn($q) => $q
-                    ->where('locale', $this->language),
-
-                // ✅ Load property via serviceMaster.shop.property — correct linkage
-                'serviceMasters.shop.property',
-                'serviceMasters.shop.translation' => fn($q) => $q
                     ->where('locale', $this->language),
             ]);
     }
-
 
     /**
      * @param int $id
