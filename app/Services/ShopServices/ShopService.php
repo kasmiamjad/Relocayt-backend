@@ -163,7 +163,7 @@ class ShopService extends CoreService
                 ]);
                 throw new \RuntimeException('User creation failed - could not extract user ID');
             }
-            //Log::info('Successfully created master user', ['user_id' => $userId]);
+            Log::info('DATA --> ', ['DATA' => $data]);
             try {
                 $coverImage = data_get($data, 'coverImage');
                 $property = Property::create([
