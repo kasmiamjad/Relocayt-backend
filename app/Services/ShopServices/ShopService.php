@@ -195,8 +195,8 @@ class ShopService extends CoreService
                     'check_in_time'    => data_get($data, 'check_in_time'),
                     'check_out_time'   => data_get($data, 'check_out_time'),
                     'instant_bookable' => data_get($data, 'instant_bookable'),
-                    'logo_img'         => $coverImage,
-                    'background_img'   => $coverImage,
+                    'logo_img'         => data_get($data, 'background_img'),
+                    'background_img'   => data_get($data, 'background_img'),
                     'status'           => 'inactive', // or 'active' as needed
                     'uuid'             => Str::uuid(),
                     'slug'             => Str::slug(data_get($data, 'title.en')) . '-' . rand(100,999),
