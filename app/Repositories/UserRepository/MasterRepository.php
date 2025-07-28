@@ -34,6 +34,11 @@ class MasterRepository extends CoreRepository
      */
     public function index(array $filter = []): LengthAwarePaginator
     {
+        $master = User::with('property')->find(1117);
+
+        Log::info('Loaded property for master 1117', [
+            'property' => $master->property,
+        ]);
         return User::filter(array_merge($filter, ['role' => 'master']))
             ->whereHas('serviceMaster', fn($q) => $q
                 ->select('service_id', 'active', 'master_id')
@@ -55,7 +60,7 @@ class MasterRepository extends CoreRepository
 
                 // ✅ Load property via user->property, not shop
                 'property' => fn($q) => $q->select([
-                    'id', 'host_id', 'title', 'property_type', 'room_type', 'accommodates',
+                    'id', 'master_id', 'title', 'property_type', 'room_type', 'accommodates',
                     'bedrooms', 'beds', 'bathrooms', 'price_per_night', 'currency',
                     'check_in_time', 'check_out_time', 'instant_bookable',
                     'latitude', 'longitude', 'description', 'logo_img', 'background_img',
