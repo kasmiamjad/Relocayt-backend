@@ -544,7 +544,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
     public function property()
     {
-        return $this->hasOne(Property::class, 'host_id', 'id');
+        return $this->hasOne(Property::class, 'master_id', 'id');
     }
 
 }
