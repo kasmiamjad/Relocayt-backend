@@ -316,7 +316,7 @@ class  ShopRepository extends CoreRepository
     $shopId = $shop->id;
 
     $property = DB::table('property')
-        ->when(!$shopId, fn($q) => $q->where('master_id', data_get($filter, 'master_id')))
+        ->where('master_id', data_get($filter, 'master_id'))
         ->select([
             'id', 'title', 'property_type', 'room_type', 'accommodates',
             'bedrooms', 'beds', 'bathrooms', 'price_per_night', 'currency',
@@ -324,6 +324,7 @@ class  ShopRepository extends CoreRepository
             'latitude', 'longitude', 'description', 'logo_img', 'background_img',
         ])
         ->first();
+
 
     if ($property) {
         $property->amenities = DB::table('amenities')
