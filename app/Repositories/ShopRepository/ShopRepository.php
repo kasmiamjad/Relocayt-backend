@@ -316,7 +316,6 @@ class  ShopRepository extends CoreRepository
     $shopId = $shop->id;
 
     $property = DB::table('property')
-        ->where('host_id', $shopId)
         ->when(!$shopId, fn($q) => $q->where('master_id', data_get($filter, 'master_id')))
         ->select([
             'id', 'title', 'property_type', 'room_type', 'accommodates',
