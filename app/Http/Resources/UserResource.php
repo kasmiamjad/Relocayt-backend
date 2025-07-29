@@ -115,7 +115,6 @@ class UserResource extends JsonResource
             'email_subscribe'               => $this->whenLoaded('emailSubscription'),
             'notifications'                 => $this->whenLoaded('notifications'),
             'shop'                          => ShopResource::make($this->whenLoaded('shop')),
-            'property'                      => $this->whenLoaded('property'),
             'wallet'                        => WalletResource::make($this->whenLoaded('wallet')),
             'point'                         => UserPointResource::make($this->whenLoaded('point')),
             'reviews'                       => ReviewResource::collection($this->whenLoaded('reviews')),
