@@ -95,6 +95,13 @@ class MasterRepository extends CoreRepository
                     ->where('locale', $this->language),
                 'translation' => fn($q) => $q
                     ->where('locale', $this->language),
+                // ✅ Load property via user->property, not shop
+                'property' => fn($q) => $q->select([
+                    'id', 'master_id', 'title', 'property_type', 'room_type', 'accommodates',
+                    'bedrooms', 'beds', 'bathrooms', 'price_per_night', 'currency',
+                    'check_in_time', 'check_out_time', 'instant_bookable',
+                    'latitude', 'longitude', 'description', 'logo_img', 'background_img',
+                ]),
                 'serviceMasters' => fn($q) => $q->where('active', true),
                 'serviceMasters.service:id,slug,category_id',
                 'serviceMasters.service.translation'=> fn($q) => $q
