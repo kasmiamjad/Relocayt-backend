@@ -54,11 +54,10 @@ class MasterRepository extends CoreRepository
                     ->where('locale', $this->language),
                 'translations',
 
-                // ✅ Load property via user->property, not shop
                 'property' => fn($q) => $q->select([
                     'id', 'master_id', 'title', 'property_type', 'room_type', 'accommodates',
                     'bedrooms', 'beds', 'bathrooms', 'price_per_night', 'currency',
-                    'check_in_time', 'check_out_time', 'instant_bookable',
+                    'check_in_time', 'city', 'state', 'country', 'check_out_time', 'instant_bookable', 'address_line',
                     'latitude', 'longitude', 'description', 'logo_img', 'background_img',
                 ]),
 
