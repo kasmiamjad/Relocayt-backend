@@ -337,7 +337,7 @@ class  ShopRepository extends CoreRepository
     }
 
     //Log::info('SHOP DETAILS new', ['shop' => $shop]);
-    // Log::info('PROPERTY DETAILS', ['property' => $property]);
+     Log::info('PROPERTY DETAILS', ['property' => $property]);
 
     return $shop;
 
