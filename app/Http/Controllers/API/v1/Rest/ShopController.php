@@ -118,7 +118,7 @@ class ShopController extends RestBaseController
     public function showSlug(string $slug, FilterParamsRequest $request): JsonResponse
     {
         $shop = $this->repository->shopDetailsBySlug($slug, $request->all());
-        Log::info('slug found', ['slug' => $slug, 'request' => $request]);
+        //Log::info('slug found', ['slug' => $slug, 'request' => $request]);
         if (empty($shop)) {
             return $this->onErrorResponse(['code' => ResponseError::ERROR_404]);
         }

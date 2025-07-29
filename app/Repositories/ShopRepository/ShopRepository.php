@@ -304,7 +304,7 @@ class  ShopRepository extends CoreRepository
         ->first();
 
     if (!$shop) {
-        Log::info('SHOP NOT FOUND for slug', ['slug' => $slug]);
+        Log::info('SHOP NOT FOUND for slug', ['slug' => $filter]);
         return null; // ✅ early return prevents "none returned" error
     }
     Log::info('SHOP FOUND from slug:', ['shop' => $shop]);
@@ -317,6 +317,7 @@ class  ShopRepository extends CoreRepository
 
     $property = DB::table('property')
         ->where('host_id', $shopId)
+        ->when(!$shopId, fn($q) => $q->where('master_id', data_get($filter, 'master_id')))
         ->select([
             'id', 'title', 'property_type', 'room_type', 'accommodates',
             'bedrooms', 'beds', 'bathrooms', 'price_per_night', 'currency',
