@@ -307,7 +307,7 @@ class  ShopRepository extends CoreRepository
         Log::info('SHOP NOT FOUND for slug', ['slug' => $filter]);
         return null; // ✅ early return prevents "none returned" error
     }
-    Log::info('SHOP FOUND from slug:', ['shop' => $shop]);
+    Log::info('SHOP FOUND from slug:', ['master_id' => data_get($filter, 'master_id')]);
 
 
     $shop->setAttribute('distance', $shop->distance ?? 1);
