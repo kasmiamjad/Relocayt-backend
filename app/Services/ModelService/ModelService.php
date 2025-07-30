@@ -201,6 +201,7 @@ class ModelService extends CoreService
     {
         try {
             Log::info('Service Update Data', $data);
+            DB::table('services')->where('id', $service->id)->update(['status' => 'accepted']);
             $service = DB::transaction(function () use ($service, $data) {
 
                 $service->update($data);
