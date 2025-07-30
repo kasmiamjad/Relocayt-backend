@@ -130,7 +130,15 @@ class ServiceController extends AdminBaseController
     public function update(Service $service, UpdateRequest $request): JsonResponse
     {
         $validated = $request->validated();
+        $id = $request->route('service'); // ✅ Grab ID manually
+        $service = Service::find($id);
 
+        if (!$service) {
+            return response()->json(['status' => false, 'message' => 'Service not found'], 404);
+        }
+
+        \Log::info("Updating service ID: {$id}");
+        
         Log::info("Requesting service : {$service}, request: {$request}", $validated );
         $result = $this->service->update($service, $validated);
 
