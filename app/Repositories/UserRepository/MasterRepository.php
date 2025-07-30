@@ -63,6 +63,7 @@ class MasterRepository extends CoreRepository
 
                 'serviceMaster' => fn($q) => $q
                     ->where('active', true)
+                    ->whereHas('service', fn($sq) => $sq->where('status', 'accepted'))
                     ->when(data_get($filter, 'service_id'), fn ($query, $id) => $query->where('service_id', $id))
                     ->when(data_get($filter, 'service_ids'), fn ($query, $ids) => $query->whereIn('service_id', $ids)),
 
