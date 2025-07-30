@@ -200,11 +200,19 @@ class ModelService extends CoreService
     public function update(Service $service, array $data): array
     {
         try {
-            Log::info('Service Update Data', $data);
-            DB::table('services')->where('id', $service->id)->update(['status' => 'accepted']);
+            \Log::info('Service Update Data', $data);
+
             $service = DB::transaction(function () use ($service, $data) {
 
-                $service->update($data);
+                // Merge and update everything together
+                $service->fill($data);
+
+                if (data_get($data, 'images.0')) {
+                    $service->img = data_get($data, 'previews.0') ?? data_get($data, 'images.0');
+                }
+
+                $service->save(); // Only one update
+
                 DB::listen(function ($query) {
                     \Log::info('Executed Query', [
                         'sql' => $query->sql,
@@ -212,25 +220,32 @@ class ModelService extends CoreService
                         'time' => $query->time
                     ]);
                 });
-                (new ShopService)->updateShopPrices($service);
 
+                (new ShopService)->updateShopPrices($service);
                 $this->setTranslations($service, $data);
 
                 if (data_get($data, 'images.0')) {
-                    $service->update(['img' => data_get($data, 'previews.0') ?? data_get($data, 'images.0')]);
                     $service->uploads(data_get($data, 'images'));
                 }
 
-                return $service;
+                return $service->refresh(); // Refresh with DB values
             });
-            
 
-            return ['status' => true, 'code' => ResponseError::NO_ERROR, 'data' => $service];
+            return [
+                'status' => true,
+                'code' => ResponseError::NO_ERROR,
+                'data' => $service
+            ];
         }
         catch (Throwable $e) {
-            return ['status' => false, 'code' => ResponseError::ERROR_400, 'message' => $e->getMessage()];
+            return [
+                'status' => false,
+                'code' => ResponseError::ERROR_400,
+                'message' => $e->getMessage()
+            ];
         }
     }
+
 
     /**
      * @param array $ids
