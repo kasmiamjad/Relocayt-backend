@@ -205,13 +205,11 @@ class ModelService extends CoreService
             // ✅ Direct SQL-level update
             $updated = DB::table('services')
                 ->where('id', $service->id)
-                ->update(['status' => 'accepted', 'updated_at' => now()]);
+                ->update([$data, 'updated_at' => now()]);
 
             \Log::info('Raw update result:', ['updated' => $updated]);
 
             // Optionally reload the model if needed
-            $service = Service::find($service->id);
-
             return [
                 'status' => true,
                 'message' => 'Status updated directly',
