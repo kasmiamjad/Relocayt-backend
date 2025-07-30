@@ -204,7 +204,13 @@ class ModelService extends CoreService
             $service = DB::transaction(function () use ($service, $data) {
 
                 $service->update($data);
-
+                DB::listen(function ($query) {
+                    \Log::info('Executed Query', [
+                        'sql' => $query->sql,
+                        'bindings' => $query->bindings,
+                        'time' => $query->time
+                    ]);
+                });
                 (new ShopService)->updateShopPrices($service);
 
                 $this->setTranslations($service, $data);
@@ -216,13 +222,7 @@ class ModelService extends CoreService
 
                 return $service;
             });
-            DB::listen(function ($query) {
-                \Log::info('Executed Query', [
-                    'sql' => $query->sql,
-                    'bindings' => $query->bindings,
-                    'time' => $query->time
-                ]);
-            });
+            
 
             return ['status' => true, 'code' => ResponseError::NO_ERROR, 'data' => $service];
         }
