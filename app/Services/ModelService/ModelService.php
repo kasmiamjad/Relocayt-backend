@@ -214,7 +214,10 @@ class ModelService extends CoreService
             \Log::info('Raw update result:', ['updated' => $updated]);
 
             // Optionally reload the model if needed
-            return ['status' => true, 'code' => ResponseError::NO_ERROR, 'data' => $updated];
+            return [
+                'status' => true,
+                'data' => Service::find($service->id), // or $service if already refreshed
+            ];
 
         } catch (Throwable $e) {
             return [
