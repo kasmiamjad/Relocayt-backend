@@ -127,32 +127,31 @@ class ServiceController extends AdminBaseController
      * @param UpdateRequest $request
      * @return JsonResponse
      */
-    public function update(int $id, array $data): array
+    public function update(Service $service, UpdateRequest $request): JsonResponse
     {
-        try {
-            \Log::info('Hardcoded Service ID:', ['id' => $id]);
+        $validated = $request->validated();
+        $id = $request->route('service'); // ✅ Grab ID manually
+        $service = Service::find($id);
 
-            $updated = DB::table('services')
-                ->where('id', $id)
-                ->update(['status' => 'accepted', 'updated_at' => now()]);
-
-            \Log::info('Raw update result:', ['updated' => $updated]);
-
-            $service = Service::find($id); // ✅ get full model again
-
-            return [
-                'status' => true,
-                'message' => 'Status updated directly',
-                'data' => $service, // ✅ return model, not array
-            ];
-        } catch (Throwable $e) {
-            return [
-                'status' => false,
-                'message' => $e->getMessage(),
-            ];
+        if (!$service) {
+            return response()->json(['status' => false, 'message' => 'Service not found'], 404);
         }
-    }
 
+        \Log::info("Updating service ID: {$id}");
+        
+        Log::info("Requesting service : {$service}, request: {$request}", $validated );
+        
+        $result = $this->service->update($service, $validated);
+
+        if (!data_get($result, 'status')) {
+            return $this->onErrorResponse($result);
+        }
+
+        return $this->successResponse(
+            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
+            ServiceResource::make(data_get($result, 'data'))
+        );
+    }
 
     /**
      * Remove the specified resource from storage.
