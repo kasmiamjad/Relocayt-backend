@@ -202,7 +202,11 @@ class ModelService extends CoreService
         try {
             Log::info('Service Update Data', $data);
             $service = DB::transaction(function () use ($service, $data) {
-
+                if (!$service) {
+                    \Log::error('Service is null');
+                    return ['status' => false, 'message' => 'Service not found'];
+                }
+                
                  $service->update(['status' => 'accepted']);
                 
                 \Log::info('Hardcoded status update done.');
