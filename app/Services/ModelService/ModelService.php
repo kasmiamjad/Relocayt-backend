@@ -200,29 +200,28 @@ class ModelService extends CoreService
     public function update(Service $service, array $data): array
     {
         try {
-            Log::info('Service Update Data', $data);
             $service = DB::transaction(function () use ($service, $data) {
-
-                $service->update($data);
-
-                (new ShopService)->updateShopPrices($service);
-
-                $this->setTranslations($service, $data);
+                $service->fill($data);
 
                 if (data_get($data, 'images.0')) {
-                    $service->update(['img' => data_get($data, 'previews.0') ?? data_get($data, 'images.0')]);
+                    $service->img = data_get($data, 'previews.0') ?? data_get($data, 'images.0');
                     $service->uploads(data_get($data, 'images'));
                 }
 
-                return $service;
+                $service->save();
+
+                (new ShopService)->updateShopPrices($service);
+                $this->setTranslations($service, $data);
+
+                return $service->refresh(); // ⬅️ Make sure this is here
             });
 
             return ['status' => true, 'code' => ResponseError::NO_ERROR, 'data' => $service];
-        }
-        catch (Throwable $e) {
+        } catch (Throwable $e) {
             return ['status' => false, 'code' => ResponseError::ERROR_400, 'message' => $e->getMessage()];
         }
     }
+
 
     /**
      * @param array $ids
