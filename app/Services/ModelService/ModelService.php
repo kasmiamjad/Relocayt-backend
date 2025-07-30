@@ -200,6 +200,7 @@ class ModelService extends CoreService
     public function update(Service $service, array $data): array
     {
         try {
+            Log::info('Service Update Data', $data);
             $service = DB::transaction(function () use ($service, $data) {
 
                 $service->update($data);
