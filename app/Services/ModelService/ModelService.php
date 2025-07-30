@@ -216,6 +216,13 @@ class ModelService extends CoreService
 
                 return $service;
             });
+            DB::listen(function ($query) {
+                \Log::info('Executed Query', [
+                    'sql' => $query->sql,
+                    'bindings' => $query->bindings,
+                    'time' => $query->time
+                ]);
+            });
 
             return ['status' => true, 'code' => ResponseError::NO_ERROR, 'data' => $service];
         }
