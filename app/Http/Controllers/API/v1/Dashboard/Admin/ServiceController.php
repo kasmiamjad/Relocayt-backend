@@ -15,6 +15,8 @@ use App\Repositories\ServiceRepository\ServiceRepository;
 use App\Services\ModelService\ModelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
+
 
 class ServiceController extends AdminBaseController
 {
@@ -129,6 +131,7 @@ class ServiceController extends AdminBaseController
     {
         $validated = $request->validated();
 
+        Log::info("Requesting service : {$service}, request: {$request}");
         $result = $this->service->update($service, $validated);
 
         if (!data_get($result, 'status')) {

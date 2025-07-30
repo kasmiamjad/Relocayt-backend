@@ -34,47 +34,48 @@ class MasterRepository extends CoreRepository
      * @return LengthAwarePaginator
      */
     public function index(array $filter = []): LengthAwarePaginator
-{
-    return User::filter(array_merge($filter, ['role' => 'master']))
-        ->whereHas('serviceMaster', fn($q) => $q
-            ->select('service_id', 'active', 'master_id')
-            ->where('active', true)
-            ->whereHas('service', fn($sq) => $sq->where('status', 'accepted')) // ✅ Filter services
-            ->when(data_get($filter, 'service_id'), fn ($query, $id) => $query->where('service_id', $id))
-            ->when(data_get($filter, 'service_ids'), fn ($query, $ids) => $query->whereIn('service_id', $ids))
-        )
-        ->whereHas('invite', fn($q) => $q->select(['user_id', 'status'])->where('status', Invitation::ACCEPTED))
-        ->with([
-            'invite' => fn($q) => $q
-                ->select(['id', 'user_id', 'shop_id', 'status'])
-                ->where('status', Invitation::ACCEPTED),
-            'invite.shop:id,uuid,slug,latitude,longitude',
-            'invite.shop.translation' => fn($query) => $query
-                ->where('locale', $this->language),
-            'translation' => fn($q) => $q
-                ->where('locale', $this->language),
-            'translations',
-
-            'property' => fn($q) => $q->select([
-                'id', 'master_id', 'title', 'property_type', 'room_type', 'accommodates',
-                'bedrooms', 'beds', 'bathrooms', 'price_per_night', 'currency',
-                'check_in_time', 'city', 'state', 'country', 'check_out_time', 'instant_bookable', 'address_line',
-                'latitude', 'longitude', 'description', 'logo_img', 'background_img',
-            ]),
-
-            'serviceMaster' => fn($q) => $q
+    {
+        Log::info('🧪 Incoming validated data:',$filter);
+        return User::filter(array_merge($filter, ['role' => 'master']))
+            ->whereHas('serviceMaster', fn($q) => $q
+                ->select('service_id', 'active', 'master_id')
                 ->where('active', true)
-                ->whereHas('service', fn($sq) => $sq->where('status', 'accepted')) // ✅ Only load accepted services
+                ->whereHas('service', fn($sq) => $sq->where('status', 'accepted')) // ✅ Filter services
                 ->when(data_get($filter, 'service_id'), fn ($query, $id) => $query->where('service_id', $id))
                 ->when(data_get($filter, 'service_ids'), fn ($query, $ids) => $query->whereIn('service_id', $ids))
-                ->with(['service' => fn($sq) => $sq->select('id', 'status')]), // ✅ Load status too
+            )
+            ->whereHas('invite', fn($q) => $q->select(['user_id', 'status'])->where('status', Invitation::ACCEPTED))
+            ->with([
+                'invite' => fn($q) => $q
+                    ->select(['id', 'user_id', 'shop_id', 'status'])
+                    ->where('status', Invitation::ACCEPTED),
+                'invite.shop:id,uuid,slug,latitude,longitude',
+                'invite.shop.translation' => fn($query) => $query
+                    ->where('locale', $this->language),
+                'translation' => fn($q) => $q
+                    ->where('locale', $this->language),
+                'translations',
 
-            'serviceMaster.service.translation' => fn($q) => $q
-                ->where('locale', $this->language),
-        ])
-        ->withMin('serviceMasters', 'price')
-        ->paginate($filter['perPage'] ?? 10);
-}
+                'property' => fn($q) => $q->select([
+                    'id', 'master_id', 'title', 'property_type', 'room_type', 'accommodates',
+                    'bedrooms', 'beds', 'bathrooms', 'price_per_night', 'currency',
+                    'check_in_time', 'city', 'state', 'country', 'check_out_time', 'instant_bookable', 'address_line',
+                    'latitude', 'longitude', 'description', 'logo_img', 'background_img',
+                ]),
+
+                'serviceMaster' => fn($q) => $q
+                    ->where('active', true)
+                    ->whereHas('service', fn($sq) => $sq->where('status', 'accepted')) // ✅ Only load accepted services
+                    ->when(data_get($filter, 'service_id'), fn ($query, $id) => $query->where('service_id', $id))
+                    ->when(data_get($filter, 'service_ids'), fn ($query, $ids) => $query->whereIn('service_id', $ids))
+                    ->with(['service' => fn($sq) => $sq->select('id', 'status')]), // ✅ Load status too
+
+                'serviceMaster.service.translation' => fn($q) => $q
+                    ->where('locale', $this->language),
+            ])
+            ->withMin('serviceMasters', 'price')
+            ->paginate($filter['perPage'] ?? 10);
+    }
 
 
 
