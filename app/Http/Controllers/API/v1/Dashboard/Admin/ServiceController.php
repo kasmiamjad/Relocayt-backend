@@ -131,7 +131,7 @@ class ServiceController extends AdminBaseController
     {
         $validated = $request->validated();
 
-        Log::info("Requesting service : {$service}, request: {$request}");
+        Log::info("Requesting service : {$service}, request: {$validated}");
         $result = $this->service->update($service, $validated);
 
         if (!data_get($result, 'status')) {
