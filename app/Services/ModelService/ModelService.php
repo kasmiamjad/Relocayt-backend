@@ -203,21 +203,22 @@ class ModelService extends CoreService
             \Log::info('Hardcoded Service ID:', ['id' => $service->id]);
 
             // ✅ Direct SQL-level update
-            $updated = DB::table('services')
-                ->where('id', $service->id)
-                ->update(['status' => 'accepted', 'updated_at' => now()]);
+          $updated = DB::table('services')
+            ->where('id', $service->id)
+            ->update([
+                'status' => data_get($data, 'status'), // ✅ dynamically use the incoming value
+                'updated_at' => now()
+            ]);
+
 
             \Log::info('Raw update result:', ['updated' => $updated]);
 
             // Optionally reload the model if needed
             return [
                 'status' => true,
-                'message' => 'Status updated directly',
-                'data' => [
-                    'id' => $service->id,
-                    'status' => $service->status,
-                ],
+                'data' => Service::find($id), // or $service if already refreshed
             ];
+
         } catch (Throwable $e) {
             return [
                 'status' => false,
