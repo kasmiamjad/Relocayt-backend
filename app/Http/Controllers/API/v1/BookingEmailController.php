@@ -12,6 +12,11 @@ class BookingEmailController extends Controller
 
     public function send(Request $request)
     {
+
+        if ($request->header('X-API-KEY') !== config('services.api_key')) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+        
         $data = $request->validate([
             'serviceMasterId' => 'required|integer',
             'shopSlug' => 'nullable|string',

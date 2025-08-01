@@ -27,11 +27,12 @@ class EmailSendService extends CoreService
     /**
      * @return string
      */
+    
     protected function getModelClass(): string
     {
         return EmailSetting::class;
     }
-
+    
     public function sendSubscriptions(EmailTemplate $emailTemplate): array
     {
         $mail = new PHPMailer(true);
@@ -369,6 +370,40 @@ class EmailSendService extends CoreService
 
     public function sendBookingInterestEmail(array $data): array
     {
+        // ✅ Domain restriction
+        $allowedOrigins = [
+            'https://relocayt.ca',
+            'https://admin.relocayt.ca',
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+        ];
+
+        $origin = request()->header('Origin') ?? request()->header('Referer') ?? '';
+
+        if (!in_array($origin, $allowedOrigins)) {
+            \Log::warning("Blocked booking email from untrusted origin: $origin");
+            return [
+                'status' => false,
+                'message' => 'Unauthorized domain',
+                'code' => ResponseError::ERROR_403,
+            ];
+        }
+
+        // ✅ Rate limit by IP
+        $ip = request()->ip();
+        $key = "email_limit:$ip";
+
+        $count = cache()->increment($key);
+        cache()->put($key, $count, now()->addMinutes(60)); // 1-hour expiration
+
+        if ($count > 5) {
+            \Log::warning("Too many booking emails from IP: $ip");
+            return [
+                'status' => false,
+                'message' => 'Too many requests. Try again later.',
+                'code' => ResponseError::ERROR_429,
+            ];
+        }
         try {
             $emailSetting = EmailSetting::find(3);
 
