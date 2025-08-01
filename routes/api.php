@@ -1114,6 +1114,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             Route::get('users/{uuid}/login-as',         [Admin\UserController::class, 'loginAsUser']);
             Route::apiResource('users',       Admin\UserController::class)->except(['index']);
             Route::delete('users/delete',               [Admin\UserController::class, 'destroy']);
+            Route::post('users/{uuid}/verification-status', [Admin\UserController::class, 'updateVerificationStatus']);
+
 
             /* User Working Days */
             Route::apiResource('user-working-days', Admin\UserWorkingDayController::class);

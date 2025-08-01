@@ -313,4 +313,26 @@ class UserController extends AdminBaseController
 
         return WalletHistoryResource::collection($histories);
     }
+    
+    public function updateVerificationStatus(Request $request, string $uuid): JsonResponse
+    {
+        $request->validate([
+            'verification_status' => 'required|in:pending,approved,rejected',
+            'verification_note' => 'nullable|string|max:1000',
+        ]);
+
+        $user = User::where('uuid', $uuid)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->update([
+            'verification_status' => $request->verification_status,
+            'verification_note' => $request->verification_note,
+        ]);
+
+        return response()->json(['message' => 'Verification status updated successfully']);
+    }
+
 }
