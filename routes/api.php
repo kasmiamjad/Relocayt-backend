@@ -24,7 +24,7 @@ use App\Http\Controllers\API\v1\Dashboard\Master\ServiceMasterController;
 |
 */
 
-Route::middleware([])->post('/send-booking-email',  [BookingEmailController::class, 'send']);
+Route::middleware([])->post('/send-booking-email',  [BookingEmailController::class, 'send'])->middleware('throttle:5,1');
 
 Route::get('/test-shop', [ShopController::class, 'paginate']);
 Route::get('/debug-log-test', function () {
@@ -54,14 +54,14 @@ Route::get('/debug', function () {
     ]);
 });
 
-Route::get('/test-mail', function () {
-    Mail::raw('Hello! This is a test email via Amazon SES SMTP.', function ($message) {
-        $message->to('kasmi.amjad@gmail.com')
-                ->subject('SES Test Email');
-    });
+// Route::get('/test-mail', function () {
+//     Mail::raw('Hello! This is a test email via Amazon SES SMTP.', function ($message) {
+//         $message->to('kasmi.amjad@gmail.com')
+//                 ->subject('SES Test Email');
+//     });
 
-    return 'Email sent!';
-});
+//     return 'Email sent!';
+// });
 
 Route::get('v1/rest/amenities', [AmenityController::class, 'index']);
 
