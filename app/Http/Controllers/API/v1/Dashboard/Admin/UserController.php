@@ -19,6 +19,7 @@ use App\Services\UserServices\UserWalletService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Request;
 
 class UserController extends AdminBaseController
 {
@@ -313,7 +314,7 @@ class UserController extends AdminBaseController
 
         return WalletHistoryResource::collection($histories);
     }
-    
+
     public function updateVerificationStatus(Request $request, string $uuid): JsonResponse
     {
         $request->validate([
