@@ -30,10 +30,7 @@ Route::get('/test-shop', [ShopController::class, 'paginate']);
 Route::get('/debug-log-test', function () {
     throw new \Exception('💥 Test crash to verify logging works');
 });
-Route::get('test-admin/services', [ServiceController::class, 'index'])->withoutMiddleware([
-    'auth:sanctum',   // or 'auth:api' if you're using token-based auth
-    'auth'            // depending on your guard
-]);
+
 Route::get('/debug-ping', function () {
     Log::info('CHECK API LOGGED HERE.......');
     return response()->json(['message' => '✅ Reached route']);

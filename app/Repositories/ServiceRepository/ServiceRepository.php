@@ -53,10 +53,10 @@ class ServiceRepository extends CoreRepository
 
     public function paginate(array $filter): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        Log::info('🧪 Starting paginate()', [
-            'filter' => $filter,
-            'language' => $this->language
-        ]);
+        // Log::info('🧪 Starting paginate()', [
+        //     'filter' => $filter,
+        //     'language' => $this->language
+        // ]);
 
         try {
             return $this->model()
@@ -80,6 +80,7 @@ class ServiceRepository extends CoreRepository
                 ->with([
                     'translation' => fn($q) => $q->where('locale', $this->language),
                     'category.translation' => fn($q) => $q->where('locale', $this->language),
+                    'user:id,name,email',
                 ])
                 ->orderBy('id', 'desc')
                 ->paginate($filter['perPage'] ?? 10);

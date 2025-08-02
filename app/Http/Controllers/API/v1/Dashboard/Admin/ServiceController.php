@@ -17,7 +17,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Log;
 
-
 class ServiceController extends AdminBaseController
 {
     public function __construct(private ServiceRepository $repository, private ModelService $service)
