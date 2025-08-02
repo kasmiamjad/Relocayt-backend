@@ -220,4 +220,9 @@ class Service extends Model
                 });
             }));
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id'); // or 'created_by' if that's your column
+    }
+
 }
