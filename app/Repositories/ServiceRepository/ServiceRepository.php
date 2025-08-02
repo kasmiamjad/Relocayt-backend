@@ -80,7 +80,7 @@ class ServiceRepository extends CoreRepository
                 ->with([
                     'translation' => fn($q) => $q->where('locale', $this->language),
                     'category.translation' => fn($q) => $q->where('locale', $this->language),
-                    'shop.seller:id,firstname,email',
+                    'shop.seller:id,firstname,email,verification_status',
                 ])
                 ->orderBy('id', 'desc')
                 ->paginate($filter['perPage'] ?? 10);
