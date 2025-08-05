@@ -93,10 +93,7 @@ class  ShopRepository extends CoreRepository
         $latitude  = data_get($filter, 'address.latitude');
         $longitude = data_get($filter, 'address.longitude');
 
-       return $shop
-    ->whereHas('services', function ($q) {
-        $q->where('type', 'online');
-    })
+       return $shop 
     ->with([
         'translation' => fn($q) => $q->where('locale', $this->language),
 

@@ -94,9 +94,6 @@ class ServiceRepository extends CoreRepository
             abort(500, 'Paginate crash: ' . $e->getMessage());
         }
     }
-
-
-
     public function show(Service $model): Service
     {
         return $model->loadMissing($this->getShowWith());
