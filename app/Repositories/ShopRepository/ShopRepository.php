@@ -87,13 +87,16 @@ class  ShopRepository extends CoreRepository
         //     ]);
         // });
         
-        //Log::info('🧾 shopsPaginate filter:', $filter);
+        Log::info('🧾 shopsPaginate filter:', $filter);
         /** @var Shop $shop */
         $shop      = $this->model();
         $latitude  = data_get($filter, 'address.latitude');
         $longitude = data_get($filter, 'address.longitude');
 
-       return $shop 
+       return $shop
+    ->whereHas('services', function ($q) {
+        $q->where('type', 'online');
+    })
     ->with([
         'translation' => fn($q) => $q->where('locale', $this->language),
 
