@@ -93,49 +93,53 @@ class  ShopRepository extends CoreRepository
         $latitude  = data_get($filter, 'address.latitude');
         $longitude = data_get($filter, 'address.longitude');
 
-       return $shop
-    ->whereHas('services', function ($q) {
-        $q->where('type', 'online');
-    })
-    ->with([
-        'translation' => fn($q) => $q->where('locale', $this->language),
+       $applyOnlineFilter = $request->get('service_type') === 'online';
 
-        'services' => fn($q) => $q
-            ->where('type', 'online')
-            ->whereHas('translation', fn($q) => $q->where('locale', $this->language)),
+        return $shop
+            ->when($applyOnlineFilter, function ($query) {
+                $query->whereHas('services', function ($q) {
+                    $q->where('type', 'online');
+                });
+            })
+            ->with([
+                'translation' => fn($q) => $q->where('locale', $this->language),
 
-        'services.translation' => fn($q) => $q->where('locale', $this->language),
+                'services' => fn($q) => $q
+                    ->when($applyOnlineFilter, fn($q) => $q->where('type', 'online'))
+                    ->whereHas('translation', fn($q) => $q->where('locale', $this->language)),
 
-        'services.serviceExtras.translation' => fn($q) => $q
-            ->where('locale', $this->language)
-            ->select('id', 'service_extra_id', 'title', 'locale'),
+                'services.translation' => fn($q) => $q->where('locale', $this->language),
 
-        'closedDates',
-        'workingDays',
-    ])
-    ->select([
-        'id',
-        'uuid',
-        'slug',
-        'logo_img',
-        'background_img',
-        'status',
-        'type',
-        'delivery_time',
-        'delivery_type',
-        'open',
-        'visibility',
-        'verify',
-        'r_count',
-        'r_avg',
-        'min_price',
-        'max_price',
-        'service_min_price',
-        'service_max_price',
-        'latitude',
-        'longitude',
-    ])
-    ->paginate($filter['perPage'] ?? 10);
+                'services.serviceExtras.translation' => fn($q) => $q
+                    ->where('locale', $this->language)
+                    ->select('id', 'service_extra_id', 'title', 'locale'),
+
+                'closedDates',
+                'workingDays',
+            ])
+            ->select([
+                'id',
+                'uuid',
+                'slug',
+                'logo_img',
+                'background_img',
+                'status',
+                'type',
+                'delivery_time',
+                'delivery_type',
+                'open',
+                'visibility',
+                'verify',
+                'r_count',
+                'r_avg',
+                'min_price',
+                'max_price',
+                'service_min_price',
+                'service_max_price',
+                'latitude',
+                'longitude',
+            ])
+            ->paginate($filter['perPage'] ?? 10);
 
 
 
