@@ -93,7 +93,7 @@ class  ShopRepository extends CoreRepository
         $latitude  = data_get($filter, 'address.latitude');
         $longitude = data_get($filter, 'address.longitude');
 
-       $applyOnlineFilter = $request->get('service_type') === 'online';
+       $applyOnlineFilter = data_get($filter, 'service_type') === 'online'; //$request->get('service_type') === 'online';
 
         return $shop
             ->when($applyOnlineFilter, function ($query) {
