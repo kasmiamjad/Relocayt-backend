@@ -79,26 +79,30 @@ class  ShopRepository extends CoreRepository
      */
     public function shopsPaginate(array $filter): LengthAwarePaginator
     {
-        // DB::listen(function ($query) {
-        //     Log::info('📥 Executed SQL:', [
-        //         'sql' => $query->sql,
-        //         'bindings' => $query->bindings,
-        //         'time_ms' => $query->time,
-        //     ]);
-        // });
-        
         Log::info('🧾 shopsPaginate filter:', $filter);
+
         /** @var Shop $shop */
         $shop      = $this->model();
         $latitude  = data_get($filter, 'address.latitude');
         $longitude = data_get($filter, 'address.longitude');
 
-       $applyOnlineFilter = data_get($filter, 'service_type') === 'online'; //$request->get('service_type') === 'online';
+        $applyOnlineFilter = data_get($filter, 'service_type') === 'online';
+        $priceRange = data_get($filter, 'service_prices');
+        $applyPriceFilter = is_array($priceRange) && count($priceRange) === 2;
 
         return $shop
-            ->when($applyOnlineFilter, function ($query) {
-                $query->whereHas('services', function ($q) {
-                    $q->where('type', 'online');
+            ->when($applyOnlineFilter || $applyPriceFilter, function ($query) use ($applyOnlineFilter, $applyPriceFilter, $priceRange) {
+                $query->whereHas('services', function ($q) use ($applyOnlineFilter, $applyPriceFilter, $priceRange) {
+                    if ($applyOnlineFilter) {
+                        $q->where('type', 'online');
+                    }
+
+                    if ($applyPriceFilter) {
+                        $q->whereBetween('price', [
+                            floatval($priceRange[0]),
+                            floatval($priceRange[1]),
+                        ]);
+                    }
                 });
             })
             ->with([
@@ -106,6 +110,10 @@ class  ShopRepository extends CoreRepository
 
                 'services' => fn($q) => $q
                     ->when($applyOnlineFilter, fn($q) => $q->where('type', 'online'))
+                    ->when($applyPriceFilter, fn($q) => $q->whereBetween('price', [
+                        floatval($priceRange[0]),
+                        floatval($priceRange[1]),
+                    ]))
                     ->whereHas('translation', fn($q) => $q->where('locale', $this->language)),
 
                 'services.translation' => fn($q) => $q->where('locale', $this->language),
@@ -140,10 +148,8 @@ class  ShopRepository extends CoreRepository
                 'longitude',
             ])
             ->paginate($filter['perPage'] ?? 10);
-
-
-
     }
+
 
     /**
      * Get one Shop by UUID
