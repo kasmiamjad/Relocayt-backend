@@ -40,7 +40,7 @@ class ServiceController extends MasterBaseController
     public function index(FilterParamsRequest $request): AnonymousResourceCollection
     {
         $filter = $request->merge(['shop_ids' => $this->shopIds])->all();
-
+        Log::info('Reached ServiceMaster@index', $filter);
         $models = $this->repository->paginate($filter);
 
         return ServiceResource::collection($models);
@@ -54,6 +54,7 @@ class ServiceController extends MasterBaseController
      */
     public function show(Service $service): JsonResponse
     {
+
         if (!in_array($service->shop_id, $this->shopIds)) {
             return $this->onErrorResponse([
                 'code'    => ResponseError::ERROR_404,
