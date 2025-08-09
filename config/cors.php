@@ -25,6 +25,7 @@ return [
         'http://localhost:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3000',
+        'https://relocayt-admin.effedo.app/',
     ],
     // 'allowed_origins' => ['*'],
     'allowed_origins_patterns' => [
