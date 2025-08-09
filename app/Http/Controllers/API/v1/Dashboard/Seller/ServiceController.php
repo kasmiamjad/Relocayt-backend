@@ -32,6 +32,7 @@ class ServiceController extends SellerBaseController
      */
     public function index(FilterParamsRequest $request): AnonymousResourceCollection
     {
+        Log::info('Reached adin seller ServiceController@index');
         $filters = $request->merge([
             'shop_id' => $this->shop->id,
             'type'    => 'online',
