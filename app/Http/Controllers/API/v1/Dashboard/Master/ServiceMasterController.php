@@ -69,7 +69,7 @@ class ServiceMasterController extends MasterBaseController
      */
     public function show(ServiceMaster $serviceMaster): JsonResponse
     {
-        Log::info('Reached ServiceMaster@index', $filter);
+        Log::info('Reached ServiceMaster@index', $serviceMaster);
         if ($serviceMaster->master_id !== auth('sanctum')->id()) {
             return $this->onErrorResponse([
                 'code'    => ResponseError::ERROR_404,
