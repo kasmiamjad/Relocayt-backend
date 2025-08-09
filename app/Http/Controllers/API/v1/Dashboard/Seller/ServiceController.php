@@ -123,7 +123,7 @@ class ServiceController extends SellerBaseController
     {
       
         $service = Service::findOrFail($id);
-        Log::info("Requesting service ID: {$service->id}, shop_id: {$service->shop_id}, user shop_id: {$this->shop->id}");
+        Log::info("Requesting service ID new...: {$service->id}, shop_id: {$service->shop_id}, user shop_id: {$this->shop->id}");
         if ($service->shop_id !== $this->shop->id) {
             return $this->onErrorResponse([
                 'code'    => ResponseError::ERROR_404,

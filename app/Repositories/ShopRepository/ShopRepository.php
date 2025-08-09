@@ -79,7 +79,7 @@ class  ShopRepository extends CoreRepository
      */
     public function shopsPaginate(array $filter): LengthAwarePaginator
     {
-        Log::info('🧾 shopsPaginate filter:', $filter);
+        //Log::info('🧾 shopsPaginate filter:', $filter);
 
         /** @var Shop $shop */
         $shop      = $this->model();
