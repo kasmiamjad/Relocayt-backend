@@ -27,7 +27,9 @@ return [
         'http://127.0.0.1:3000',
     ],
     // 'allowed_origins' => ['*'],
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https:\/\/[a-z0-9\-]+\.trycloudflare\.com$#i', // matches any subdomain
+    ],
 
     'allowed_headers' => ['*'],
 
