@@ -40,7 +40,6 @@ class ServiceController extends MasterBaseController
     public function index(FilterParamsRequest $request): AnonymousResourceCollection
     {
         $filter = $request->merge(['shop_ids' => $this->shopIds])->all();
-        Log::info('Reached ServiceMaster@index', $filter);
         $models = $this->repository->paginate($filter);
 
         return ServiceResource::collection($models);

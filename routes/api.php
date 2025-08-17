@@ -594,7 +594,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         });
 
         // SELLER BLOCK
-        Route::group(['prefix' => 'seller', 'middleware' => ['sanctum.check', 'role:seller|moderator|admin'], 'as' => 'seller.'], function () {
+        Route::group(['prefix' => 'seller', 'middleware' => ['sanctum.check'], 'as' => 'seller.'], function () {
 
             /* Dashboard */
             Route::get('statistics',                [Seller\DashboardController::class, 'ordersStatistics']);
