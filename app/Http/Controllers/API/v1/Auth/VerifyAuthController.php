@@ -186,6 +186,16 @@ class VerifyAuthController extends Controller
                 if (Schema::hasColumn('users', 'shop_id')) {
                     $user->forceFill(['shop_id' => $shop->id])->save();
                 }
+
+                if ($shop->status === 'approved' && method_exists($user, 'hasRole') && ! $user->hasRole('admin')) {
+                    if (method_exists($user, 'assignRole')) {
+                        // Use assignRole to keep existing roles (recommended)
+                        $user->assignRole('seller');
+
+                        // If you want to REPLACE roles instead, use:
+                        // $user->syncRoles('seller');
+                    }
+                }
             }
 
             DB::commit();
