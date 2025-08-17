@@ -55,7 +55,7 @@ class ServiceController extends SellerBaseController
         $validated = $request->validated();
         $validated['shop_id'] = $this->shop->id;
         unset($validated['commission_fee']);
-        \Log::info('🧪 Incoming validated data:', $validated);
+        \Log::info('🧪 Incoming validated data 222222:', $validated);
         $result = $this->service->create($validated);
 
         if (!data_get($result, 'status')) {
