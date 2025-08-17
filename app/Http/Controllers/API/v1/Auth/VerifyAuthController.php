@@ -20,6 +20,10 @@ use App\Services\UserServices\UserWalletService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Kreait\Laravel\Firebase\Facades\Firebase;
+use App\Models\Shop;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class VerifyAuthController extends Controller
@@ -95,50 +99,104 @@ class VerifyAuthController extends Controller
             return $this->onErrorResponse(['code' => ResponseError::ERROR_404]);
         }
 
-        $user->update([
-            'firstname' => $request->input('firstname', $user->email),
-            'lastname'  => $request->input('lastname', $user->lastname),
-            'referral'  => $request->input('referral', $user->referral),
-            'gender'    => $request->input('gender','male'),
-            'password'  => bcrypt($request->input('password', 'password')),
-        ]);
+        DB::beginTransaction();
 
-        $referral = User::where('my_referral', $request->input('referral', $user->referral))
-            ->first();
+        try {
+            // Update user basics
+            $user->update([
+                'firstname' => $request->input('firstname', $user->email),
+                'lastname'  => $request->input('lastname', $user->lastname),
+                'referral'  => $request->input('referral', $user->referral),
+                'gender'    => $request->input('gender','male'),
+                'password'  => bcrypt($request->input('password', 'password')),
+            ]);
 
-        if (!empty($referral) && !empty($referral->firebase_token)) {
+            // Referral notification (unchanged)
+            $referral = User::where('my_referral', $request->input('referral', $user->referral))->first();
 
-            /** @var NotificationUser $notification */
-            $notification = $referral->notifications
-                ?->where('type', Notification::PUSH)
-                ?->first();
+            if (!empty($referral) && !empty($referral->firebase_token)) {
+                /** @var NotificationUser $notification */
+                $notification = $referral->notifications?->where('type', Notification::PUSH)?->first();
 
-            if ($notification?->notification?->active) {
-                $this->sendNotification(
-                    $referral,
-                    is_array($referral->firebase_token) ? $referral->firebase_token : [$referral->firebase_token],
-                    'Congratulations!',
-                    "By your referral registered new user. $user->name_or_email",
-                    [
-                        'id'   => $referral->id,
-                        'type' => PushNotification::NEW_USER_BY_REFERRAL
-                    ],
-                    [$referral->id],
-                );
+                if ($notification?->notification?->active) {
+                    $this->sendNotification(
+                        $referral,
+                        is_array($referral->firebase_token) ? $referral->firebase_token : [$referral->firebase_token],
+                        'Congratulations!',
+                        "By your referral registered new user. $user->name_or_email",
+                        [
+                            'id'   => $referral->id,
+                            'type' => PushNotification::NEW_USER_BY_REFERRAL
+                        ],
+                        [$referral->id],
+                    );
+                }
             }
 
-        }
+            (new UserService)->notificationSync($user);
 
-        (new UserService)->notificationSync($user);
+            $user->emailSubscription()->updateOrCreate(
+                ['user_id' => $user->id],
+                ['active'  => true]
+            );
 
-        $user->emailSubscription()->updateOrCreate([
-            'user_id' => $user->id
-        ], [
-            'active' => true
-        ]);
+            if (empty($user->wallet?->uuid)) {
+                $user = (new UserWalletService)->create($user);
+            }
 
-        if (empty($user->wallet?->uuid)) {
-            $user = (new UserWalletService)->create($user);
+            // === Create a Shop for this user, if not already present ===
+            $hasShop = Shop::where('user_id', $user->id)->exists();
+
+            if (!$hasShop) {
+                // Build a unique slug
+                $base = trim(($user->firstname ? ($user->firstname.' '.$user->lastname) : $user->email));
+                $baseSlug = Str::slug($base) ?: 'user-'.$user->id;
+                $slug = $baseSlug;
+
+                $i = 1;
+                while (Shop::where('slug', $slug)->exists()) {
+                    $slug = $baseSlug.'-'.(++$i);
+                }
+
+                /** @var Shop $shop */
+                $shop = Shop::create([
+                    'user_id'       => $user->id,
+                    'uuid'          => (string) Str::uuid(),
+                    'slug'          => $slug,
+                    'status'        => 'approved',
+                    'type'          => 1,      // adjust if your enum/string differs
+                    'delivery_type' => 1,
+                    'open'          => true,
+                    'visibility'    => true,
+                    'verify'        => true,
+                    'min_amount'    => 0,
+                ]);
+
+                // Optional: create a basic translation if your app uses it
+                if (method_exists($shop, 'translation')) {
+                    $shop->translation()->create([
+                        'locale'      => $this->language ?? 'en',
+                        'title'       => ($user->firstname ?: 'My').' Shop',
+                        'description' => null,
+                        'address'     => null,
+                    ]);
+                }
+
+                // Optional: store on users.shop_id if the column exists
+                if (Schema::hasColumn('users', 'shop_id')) {
+                    $user->forceFill(['shop_id' => $shop->id])->save();
+                }
+            }
+
+            DB::commit();
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return $this->onErrorResponse([
+                'code'    => ResponseError::ERROR_501,
+                'message' => 'Registration failed',
+            ]);
         }
 
         $token = $user->createToken('api_token')->plainTextToken;
@@ -147,8 +205,9 @@ class VerifyAuthController extends Controller
             'token'         => $token,
             'access_token'  => $token,
             'token_type'    => 'Bearer',
-            'user'          => UserResource::make($user),
+            'user'          => UserResource::make($user->fresh()),
         ]);
     }
+
 
 }
