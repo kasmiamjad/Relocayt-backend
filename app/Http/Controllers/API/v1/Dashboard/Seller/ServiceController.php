@@ -16,6 +16,8 @@ use App\Services\ModelService\ModelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
 
 class ServiceController extends SellerBaseController
 {
@@ -53,19 +55,107 @@ class ServiceController extends SellerBaseController
     public function store(StoreRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $validated['shop_id'] = $this->shop->id;
+
+        // capture commission_fee for ServiceMaster (not part of Service payload)
+        $commissionFee = $validated['commission_fee'] ?? $request->input('commission_fee', 1);
         unset($validated['commission_fee']);
-        \Log::info('🧪 Incoming validated data 222222:', $validated);
-        $result = $this->service->create($validated);
 
-        if (!data_get($result, 'status')) {
-            return $this->onErrorResponse($result);
+        // ensure service is tied to current shop
+        $validated['shop_id'] = $this->shop->id;
+
+        try {
+            $result = DB::transaction(function () use ($validated, $commissionFee) {
+
+                // 1) CREATE MASTER FIRST
+                $seller = $this->shop->seller; // owner user of the shop
+                $baseEmail = $seller?->email ?? ('user'.time().'@relocayt.com');
+                $masterEmail = $this->generateUniqueEmail($baseEmail);
+
+                $userServiceResponse = app(\App\Services\UserServices\UserService::class)->create([
+                    'firstname' => data_get($validated, 'title.en', 'Master'),
+                    'lastname'  => $seller->lastname ?? null,
+                    'email'     => $masterEmail,
+                    'phone'     => null,
+                    'password'  => 'secure-default-password',
+                    'password_confirmation' => 'secure-default-password',
+                    'birthday'  => $seller->birthday?->format('Y-m-d'),
+                    'gender'    => $seller->gender ?? 1,
+                    'role'      => 'master',
+                    'images'    => [],                 // optional
+                    'shop_id'   => [$this->shop->id],  // attach to this shop
+                ]);
+
+                // robustly extract master user id
+                $resp = is_array($userServiceResponse)
+                    ? $userServiceResponse
+                    : json_decode(json_encode($userServiceResponse), true);
+
+                $masterId = data_get($resp, 'data.App\\Models\\User.id')
+                    ?? data_get($resp, 'data.id')
+                    ?? data_get($resp, 'id')
+                    ?? data_get($resp, 'user_id')
+                    ?? data_get($resp, 'data.user.id');
+
+                if (empty($masterId)) {
+                    Log::error('Failed to extract master user id from UserService response', ['response' => $resp]);
+                    throw new \RuntimeException('Master creation failed');
+                }
+
+                // 2) CREATE SERVICE
+                $serviceCreate = $this->service->create($validated);
+                if (!data_get($serviceCreate, 'status')) {
+                    throw new \RuntimeException(data_get($serviceCreate, 'message', 'Service create failed'));
+                }
+
+                /** @var \App\Models\Service $serviceModel */
+                $serviceModel = data_get($serviceCreate, 'data');
+                $serviceId = $serviceModel->id ?? data_get($serviceCreate, 'data.id');
+                if (empty($serviceId)) {
+                    throw new \RuntimeException('Service created but id missing');
+                }
+
+                // 3) LINK SERVICE ⇄ MASTER (ServiceMaster)
+                app(\App\Services\ServiceMasterService\ServiceMasterService::class)->create([
+                    'service_id'     => $serviceId,
+                    'master_id'      => $masterId,
+                    'shop_id'        => $this->shop->id,
+                    'price'          => $validated['price']        ?? 0,
+                    'interval'       => $validated['interval']     ?? 10,
+                    'pause'          => $validated['pause']        ?? 20,
+                    'type'           => $validated['type']         ?? 'offline_in',
+                    'commission_fee' => $commissionFee             ?? 1,
+                    'gender'         => $validated['gender']       ?? 1,
+                    'active'         => 1,
+                ]);
+
+                return $serviceModel;
+            });
+
+            return $this->successResponse(
+                __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
+                ServiceResource::make($result)
+            );
+
+        } catch (\Throwable $e) {
+            Log::error('Service store failed', ['error' => $e->getMessage()]);
+            return $this->onErrorResponse([
+                'status'  => false,
+                'code'    => ResponseError::ERROR_501,
+                'message' => $e->getMessage(),
+            ]);
         }
+    }
 
-        return $this->successResponse(
-            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
-            ServiceResource::make(data_get($result, 'data'))
-        );
+    /**
+     * Generate unique email like "base+YYYYmmddHHMMSS123@domain".
+     */
+    private function generateUniqueEmail(string $baseEmail): string
+    {
+        $parts  = explode('@', $baseEmail);
+        $prefix = $parts[0] ?? 'user';
+        $domain = $parts[1] ?? 'example.com';
+        $unique = $prefix . '+' . now()->format('YmdHis') . rand(100, 999);
+        return "$unique@$domain";
     }
 
     /**
