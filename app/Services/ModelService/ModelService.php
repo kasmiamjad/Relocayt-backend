@@ -33,6 +33,19 @@ class ModelService extends CoreService
                 // Coordinates
                 $latitude = data_get($data, 'lat_long.latitude');
                 $longitude = data_get($data, 'lat_long.longitude');
+                // --- Normalize radius (store in kilometers) ---
+                $radiusKm = data_get($data, 'radius_km');
+                if (is_null($radiusKm)) {
+                    // FE might send `radius` already in km
+                    $radiusKm = data_get($data, 'radius_m');
+                }
+                if (is_null($radiusKm)) {
+                    // Or meters as a fallback
+                    $meters = data_get($data, 'radius_m');
+                    if (!is_null($meters)) {
+                        $radiusKm = round(((float)$meters) / 1000, 3);
+                    }
+                }
 
                 // Main fields to insert
                 $createData = collect($data)->only([
@@ -46,6 +59,7 @@ class ModelService extends CoreService
                     'service_type',
                     'gender',
                     'price',
+                    'master_id', 
                 ])->merge([
                     'address'   => data_get($data, 'address.en'),
                     'description' => data_get($data, 'description.en'),
@@ -57,6 +71,7 @@ class ModelService extends CoreService
                     'country'   => data_get($data, 'country'),
                     'latitude'  => $latitude,
                     'longitude' => $longitude,
+                    'radius_km'   => $radiusKm,
                 ])->toArray();
 
                 /** @var Service $model */
