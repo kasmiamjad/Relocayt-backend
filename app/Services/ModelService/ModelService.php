@@ -59,7 +59,9 @@ class ModelService extends CoreService
                     'service_type',
                     'gender',
                     'price',
-                    'master_id', 
+                    'master_id',
+                    'radius_m',
+                    'radius_km',
                 ])->merge([
                     'address'   => data_get($data, 'address.en'),
                     'description' => data_get($data, 'description.en'),

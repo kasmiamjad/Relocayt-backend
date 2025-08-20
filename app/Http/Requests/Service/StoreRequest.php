@@ -58,6 +58,12 @@ class StoreRequest extends BaseRequest
             'lat_long'          => 'required|array',
             'lat_long.latitude' => 'required|numeric',
             'lat_long.longitude'=> 'required|numeric',
+            // accept radius coming from FE
+            'radius_km' => ['sometimes','numeric','min:1','max:50'],
+            // optional meters fallback
+            'radius_m'  => ['sometimes','integer','min:1000','max:50000'],
+            // master passed directly (you already have it in payload)
+            'master_id' => ['sometimes','integer','exists:users,id'],
         ];
     }
 

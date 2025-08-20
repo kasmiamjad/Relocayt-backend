@@ -101,6 +101,19 @@ class ServiceController extends SellerBaseController
                     throw new \RuntimeException('Master creation failed');
                 }
 
+                // 🔁 normalize radius → radius_km
+                $radiusKm = $validated['radius_km']
+                    ?? ($validated['radius'] ?? null)
+                    ?? ( $request->input('radius_km') ?? $request->input('radius') ); // if rules used 'sometimes'
+
+                if (is_null($radiusKm) && $request->filled('radius_m')) {
+                    $radiusKm = round(((int) $request->input('radius_m')) / 1000, 3);
+                }
+                if (!is_null($radiusKm)) {
+                    $validated['radius_km'] = (float) $radiusKm;
+                    unset($validated['radius'], $validated['radius_m']);
+                }
+
                 /** 3) ATTACH MASTER TO SERVICE ROW */
                 $validated['master_id'] = $masterId;
 
