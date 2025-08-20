@@ -53,20 +53,25 @@ class ServiceRepository extends CoreRepository
 
     public function paginate(array $filter): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        // Log::info('🧪 Starting paginate()', [
-        //     'filter' => $filter,
-        //     'language' => $this->language
-        // ]);
+        Log::info('🧪 Starting paginate()', [
+            'filter' => $filter,
+            'language' => $this->language
+        ]);
 
         try {
             return $this->model()
-                ->select([
-                    'id', 'slug', 'category_id', 'shop_id', 'status', 'status_note',
+                 ->select([
+                    'id', 'slug',
+                    'category_id', 'shop_id', 'master_id', // 👈 added master_id
+                    'status', 'status_note',
                     'img', 'price', 'commission_fee', 'interval', 'pause',
                     'type', 'discount', 'data', 'gender', 'service_type',
-                    'title', 'description', 'latitude', 'longitude',
+                    'title', 'description',
+                    'latitude', 'longitude',               // lat/lng already here
+                    'radius_km',                           // 👈 added radius_km
                     'address', 'street', 'city', 'state', 'zipcode', 'country',
-                    'gallery', 'documents', 'created_at', 'updated_at'
+                    'gallery', 'documents',
+                    'created_at', 'updated_at',
                 ])
                 ->when(isset($filter['shop_id']), fn($q) =>
                     $q->where('shop_id', $filter['shop_id'])
