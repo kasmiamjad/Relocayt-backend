@@ -61,6 +61,8 @@ class Service extends Model
 
     protected $casts = [
         'data' => 'array',
+        'lat_long'  => 'array',   // <- NEW
+        'radius_km' => 'float',
     ];
 
     const STATUS_NEW       = 'new';
@@ -71,6 +73,9 @@ class Service extends Model
         self::STATUS_NEW      => self::STATUS_NEW,
         self::STATUS_ACCEPTED => self::STATUS_ACCEPTED,
         self::STATUS_CANCELED => self::STATUS_CANCELED,
+    ];
+    protected $appends = [
+        'radius_m',               // <- NEW (virtual)
     ];
 
 //    const ALL         = 'all';
@@ -94,7 +99,6 @@ class Service extends Model
         self::FEMALE      => self::FEMALE,
         self::ALL_GENDERS => self::ALL_GENDERS
     ];
-
     public function getRatePriceAttribute(): float|int|null
     {
         if (request()->is('api/v1/dashboard/user/*') || request()->is('api/v1/rest/*')) {

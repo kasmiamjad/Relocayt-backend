@@ -66,7 +66,7 @@ class ServiceController extends SellerBaseController
         try {
             $result = DB::transaction(function () use ($validated, $commissionFee) {
 
-                // 1) CREATE MASTER FIRST
+                /** 1) CREATE MASTER FIRST */
                 $seller = $this->shop->seller; // owner user of the shop
                 $baseEmail = $seller?->email ?? ('user'.time().'@relocayt.com');
                 $masterEmail = $this->generateUniqueEmail($baseEmail);
@@ -81,8 +81,8 @@ class ServiceController extends SellerBaseController
                     'birthday'  => $seller->birthday?->format('Y-m-d'),
                     'gender'    => $seller->gender ?? 1,
                     'role'      => 'master',
-                    'images'    => [],                 // optional
-                    'shop_id'   => [$this->shop->id],  // attach to this shop
+                    'images'    => [],
+                    'shop_id'   => [$this->shop->id],
                 ]);
 
                 // robustly extract master user id
@@ -101,7 +101,21 @@ class ServiceController extends SellerBaseController
                     throw new \RuntimeException('Master creation failed');
                 }
 
-                // 2) CREATE SERVICE
+                /** 2) NORMALIZE + ATTACH RADIUS (kilometers) */
+                $radiusKm = data_get($validated, 'radius_km');                 // preferred field from FE
+                if (is_null($radiusKm)) { $radiusKm = data_get($validated, 'radius_km'); } // fallback (also km)
+                if (is_null($radiusKm) && ($m = data_get($validated, 'radius_m'))) {
+                    $radiusKm = round(((float)$m) / 1000, 3);                  // meters → km
+                }
+                if (!is_null($radiusKm)) {
+                    $validated['radius_km'] = (float)$radiusKm;
+                    unset($validated['radius'], $validated['radius_m']);
+                }
+
+                /** 3) ATTACH MASTER TO SERVICE ROW */
+                $validated['master_id'] = $masterId;
+
+                /** 4) CREATE SERVICE (now includes master_id + radius_km) */
                 $serviceCreate = $this->service->create($validated);
                 if (!data_get($serviceCreate, 'status')) {
                     throw new \RuntimeException(data_get($serviceCreate, 'message', 'Service create failed'));
@@ -114,7 +128,7 @@ class ServiceController extends SellerBaseController
                     throw new \RuntimeException('Service created but id missing');
                 }
 
-                // 3) LINK SERVICE ⇄ MASTER (ServiceMaster)
+                /** 5) LINK SERVICE ⇄ MASTER (ServiceMaster) */
                 app(\App\Services\ServiceMasterService\ServiceMasterService::class)->create([
                     'service_id'     => $serviceId,
                     'master_id'      => $masterId,
@@ -128,7 +142,7 @@ class ServiceController extends SellerBaseController
                     'active'         => 1,
                 ]);
 
-                return $serviceModel;
+                return $serviceModel->fresh(); // ensure master_id/radius_km present
             });
 
             return $this->successResponse(
@@ -145,6 +159,7 @@ class ServiceController extends SellerBaseController
             ]);
         }
     }
+
 
     /**
      * Generate unique email like "base+YYYYmmddHHMMSS123@domain".
