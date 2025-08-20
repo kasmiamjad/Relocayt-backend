@@ -31,6 +31,9 @@ class ServiceResource extends JsonResource
             ->orderBy('price')
             ->orderBy('commission_fee')
             ->first();
+        
+            $radiusKm = $this->radius_km; // may be null
+            $radiusM  = !is_null($radiusKm) ? (int) round($radiusKm * 1000) : null;
 
         $minPrice = 0;
 
