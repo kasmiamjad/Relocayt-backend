@@ -74,9 +74,6 @@ class Service extends Model
         self::STATUS_ACCEPTED => self::STATUS_ACCEPTED,
         self::STATUS_CANCELED => self::STATUS_CANCELED,
     ];
-    protected $appends = [
-        'radius_m',               // <- NEW (virtual)
-    ];
 
 //    const ALL         = 'all';
     const ONLINE      = 'online';
