@@ -29,8 +29,7 @@ return [
     ],
     // 'allowed_origins' => ['*'],
     'allowed_origins_patterns' => [
-        '#^https:\/\/[a-z0-9\-]+\.vercel\.app$#i',
-        '#^https:\/\/[a-z0-9\-]+\.trycloudflare\.com$#i', // matches any subdomain
+        '#^https:\/\/[a-z0-9\-]+\.(vercel\.app|trycloudflare\.com)$#i',
     ],
 
     'allowed_headers' => ['*'],
