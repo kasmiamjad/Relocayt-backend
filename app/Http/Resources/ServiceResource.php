@@ -44,6 +44,7 @@ class ServiceResource extends JsonResource
             'slug'              => $this->when($this->slug,                 $this->slug),
             'category_id'       => $this->when($this->category_id,          $this->category_id),
             'shop_id'           => $this->when($this->shop_id,              $this->shop_id),
+            'master_id'         => $this->when($this->master_id,            $this->master_id),
             'status'            => $this->when($this->status,               $this->status),
             'status_note'       => $this->when($this->status_note,          $this->status_note),
             'price'             => $this->when($this->rate_price,           $this->rate_price),
@@ -73,6 +74,9 @@ class ServiceResource extends JsonResource
 
             'galleryImages' => $this->when($this->gallery, $this->gallery ?? []),
             'documents'     => $this->when($this->documents, $this->documents ?? []),
+
+            'radius_km' => $this->when(!is_null($radiusKm), (float) $radiusKm),
+            'radius_m'  => $this->when(!is_null($radiusM),  (int) $radiusM),
 
             'gender'            => $this->when($this->gender,               $this->gender),
             'created_at'        => $this->when($this->created_at,  $this->created_at?->format('Y-m-d H:i:s') . 'Z'),
