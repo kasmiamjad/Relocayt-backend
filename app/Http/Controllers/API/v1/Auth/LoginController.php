@@ -27,6 +27,8 @@ use App\Models\User;
 use Str;
 use Throwable;
 use DB;
+use App\Models\Shop;
+use Illuminate\Support\Facades\Schema;
 
 class LoginController extends Controller
 {
@@ -157,6 +159,63 @@ class LoginController extends Controller
                 }
 
                 $token = $user->createToken('api_token')->plainTextToken;
+                // Ensure email subscription is active
+                $user->emailSubscription()->updateOrCreate(
+                    ['user_id' => $user->id],
+                    ['active'  => true]
+                );
+
+                // Ensure Shop exists (same behavior as afterVerify flow)
+                $hasShop = Shop::where('user_id', $user->id)->exists();
+
+                if (! $hasShop) {
+                    // Build unique slug from user's name/email
+                    $base = trim(($user->firstname ? ($user->firstname.' '.$user->lastname) : $user->email));
+                    $baseSlug = Str::slug($base) ?: 'user-'.$user->id;
+                    $slug = $baseSlug;
+
+                    $i = 1;
+                    while (Shop::where('slug', $slug)->exists()) {
+                        $slug = $baseSlug.'-'.(++$i);
+                    }
+
+                    /** @var \App\Models\Shop $shop */
+                    $shop = Shop::create([
+                        'user_id'       => $user->id,
+                        'uuid'          => (string) Str::uuid(),
+                        'slug'          => $slug,
+                        'status'        => 'approved',
+                        'type'          => 1,
+                        'delivery_type' => 1,
+                        'open'          => true,
+                        'visibility'    => true,
+                        'verify'        => true,
+                        'min_amount'    => 0,
+                    ]);
+
+                    // Optional: create translation if your model supports it
+                    if (method_exists($shop, 'translation')) {
+                        $shop->translation()->create([
+                            'locale'      => $this->language ?? 'en',
+                            'title'       => ($user->firstname ?: 'My').' Shop',
+                            'description' => null,
+                            'address'     => null,
+                        ]);
+                    }
+
+                    // Optional back‑reference if column exists
+                    if (Schema::hasColumn('users', 'shop_id')) {
+                        $user->forceFill(['shop_id' => $shop->id])->save();
+                    }
+
+                    // Give seller role unless user is admin
+                    if ($shop->status === 'approved'
+                        && method_exists($user, 'hasRole') && ! $user->hasRole('admin')
+                        && method_exists($user, 'assignRole')) {
+                        $user->assignRole('seller'); // keep existing roles
+                        // or $user->syncRoles('seller'); // if you prefer to replace
+                    }
+                }
 
                 return [
                     'token'         => $token,
