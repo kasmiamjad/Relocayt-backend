@@ -93,6 +93,7 @@ class ShopResource extends JsonResource
             'locations'         => ShopLocationResource::collection($this->whenLoaded('locations')),
             'property'      => is_object($this->property) ? [
                     'id'               => $this->property->id ?? null,
+                    'master_id'               => $this->property->master_id ?? null,
                     'title'            => $this->property->title ?? null,
                     'property_type'    => $this->property->property_type ?? null,
                     'room_type'        => $this->property->room_type ?? null,
