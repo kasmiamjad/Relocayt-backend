@@ -33,6 +33,7 @@ class ShopResource extends JsonResource
             'id'                => $this->when($this->id, $this->id),
             'slug'              => $this->when($this->slug, $this->slug),
             'first_service_id'  => $this->when(isset($this->first_service_id), (int) $this->first_service_id),
+            'service_master_id'  => $this->when(isset($this->service_master_id), (int) $this->service_master_id),
             'uuid'              => $this->when($this->uuid, $this->uuid),
             'discounts_count'   => $this->whenLoaded('discounts', $this->discounts_count),
             'user_id'           => $this->when($this->user_id, $this->user_id),

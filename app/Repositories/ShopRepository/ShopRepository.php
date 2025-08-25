@@ -165,9 +165,30 @@ class  ShopRepository extends CoreRepository
                             (float) data_get($filter, 'service_prices.0'),
                             (float) data_get($filter, 'service_prices.1'),
                         ])
-                    )
+                        ),
                     // ❌ REMOVE this if you want IDs for 'new' rows too
                     // ->where('services.status', 'accepted')
+                'service_master_id' => DB::table('service_masters as sm')
+                ->join('services as s', 's.id', '=', 'sm.service_id')
+                ->whereColumn('sm.shop_id', 'shops.id')
+                ->when(in_array(data_get($filter, 'service_type'), ['online','offline_in'], true),
+                    fn($q) => $q->where('s.type', data_get($filter, 'service_type'))
+                )
+                ->when(
+                    is_array(data_get($filter, 'service_prices')) && count(data_get($filter, 'service_prices')) === 2,
+                    fn($q) => $q->whereBetween('s.price', [
+                        (float) data_get($filter, 'service_prices.0'),
+                        (float) data_get($filter, 'service_prices.1'),
+                    ])
+                )
+                // If you only want accepted services/masters, uncomment:
+                // ->where('s.status', 'accepted')
+                // ->where('sm.active', 1)
+                ->orderBy('s.id')     // ensures the "first" service is consistent with first_service_id
+                ->orderBy('sm.id')    // tie-breaker
+                ->limit(1)
+                ->select('sm.id'),
+
             ])
             ->paginate($filter['perPage'] ?? 10);
     }
