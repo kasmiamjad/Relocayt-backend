@@ -78,91 +78,94 @@ class  ShopRepository extends CoreRepository
      * @return LengthAwarePaginator
      */
     public function shopsPaginate(array $filter): LengthAwarePaginator
-    {
-        Log::info('🧾 shopsPaginate filter:', $filter);
+{
+    Log::info('🧾 shopsPaginate filter:', $filter);
 
-        /** @var Shop $shop */
-        $shop      = $this->model();
-        $latitude  = data_get($filter, 'address.latitude');
-        $longitude = data_get($filter, 'address.longitude');
+    /** @var Shop $shop */
+    $shop      = $this->model();
+    $latitude  = data_get($filter, 'address.latitude');
+    $longitude = data_get($filter, 'address.longitude');
 
-        // Only two valid options
-        $serviceType      = data_get($filter, 'service_type'); // 'online' | 'offline_in' | null/other
-        $applyServiceType = in_array($serviceType, ['online', 'offline_in'], true);
+    // Only two valid options
+    $serviceType      = data_get($filter, 'service_type'); // 'online' | 'offline_in' | null/other
+    $applyServiceType = in_array($serviceType, ['online', 'offline_in'], true);
 
-        $priceRange       = data_get($filter, 'service_prices');
-        $applyPriceFilter = is_array($priceRange) && count($priceRange) === 2;
+    $priceRange       = data_get($filter, 'service_prices');
+    $applyPriceFilter = is_array($priceRange) && count($priceRange) === 2;
 
-        // Reusable constraints for services
-        $serviceConstraints = function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
-            if ($applyServiceType) {
-                $q->where('type', $serviceType); // only 'online' or 'offline_in'
-            }
-            if ($applyPriceFilter) {
-                $q->whereBetween('price', [(float)$priceRange[0], (float)$priceRange[1]]);
-            }
-        };
+    // Reusable EXISTS subquery (bypasses relation/global scopes)
+    $servicesExists = function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
+        $q->select(DB::raw(1))
+          ->from('services')
+          ->whereColumn('services.shop_id', 'shops.id');
 
-        return $shop
-            // Apply main services filter only when there are constraints to apply
-            ->when($applyServiceType || $applyPriceFilter, function ($query) use ($serviceConstraints) {
-                $query->whereHas('services', $serviceConstraints);
-            })
+        if ($applyServiceType) {
+            $q->where('services.type', $serviceType); // exactly 'online' or 'offline_in'
+        }
+        if ($applyPriceFilter) {
+            $q->whereBetween('services.price', [(float)$priceRange[0], (float)$priceRange[1]]);
+        }
+    };
 
-            // Keep shops that have a property OR at least one (filtered) service.
-            // If no constraints, allow any service to satisfy existence.
-            ->where(function ($q) use ($applyServiceType, $applyPriceFilter, $serviceConstraints) {
-                $q->whereHas('property')
-                ->when(
-                    $applyServiceType || $applyPriceFilter,
-                    fn($qq) => $qq->orWhereHas('services', $serviceConstraints),
-                    fn($qq) => $qq->orWhereHas('services')
-                );
-            })
+    return $shop
+        // If type/price filter present, require at least one matching service (raw EXISTS)
+        ->when($applyServiceType || $applyPriceFilter, function ($query) use ($servicesExists) {
+            $query->whereExists($servicesExists);
+        })
 
-            ->with([
-                'translation' => fn($q) => $q->where('locale', $this->language),
+        // Keep shops that either have a property OR (matching) services (raw EXISTS)
+        ->where(function ($q) use ($applyServiceType, $applyPriceFilter, $servicesExists) {
+            $q->whereHas('property')
+              ->orWhereExists($servicesExists);
+        })
 
-                'services' => function ($q) use ($applyServiceType, $applyPriceFilter, $serviceConstraints) {
-                    if ($applyServiceType || $applyPriceFilter) {
-                        $serviceConstraints($q); // apply same constraints to loaded services
-                    }
-                    $q->whereHas('translation', fn($qt) => $qt->where('locale', $this->language));
-                },
+        // Eager-load as usual (relation is fine for payload; does not affect inclusion)
+        ->with([
+            'translation' => fn($q) => $q->where('locale', $this->language),
 
-                'services.translation' => fn($q) => $q->where('locale', $this->language),
+            'services' => function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
+                if ($applyServiceType) {
+                    $q->where('type', $serviceType); // only 'online' or 'offline_in'
+                }
+                if ($applyPriceFilter) {
+                    $q->whereBetween('price', [(float)$priceRange[0], (float)$priceRange[1]]);
+                }
+                $q->whereHas('translation', fn($qt) => $qt->where('locale', $this->language));
+            },
 
-                'services.serviceExtras.translation' => fn($q) => $q
-                    ->where('locale', $this->language)
-                    ->select('id', 'service_extra_id', 'title', 'locale'),
+            'services.translation' => fn($q) => $q->where('locale', $this->language),
 
-                'closedDates',
-                'workingDays',
-            ])
-            ->select([
-                'id',
-                'uuid',
-                'slug',
-                'logo_img',
-                'background_img',
-                'status',
-                'type',
-                'delivery_time',
-                'delivery_type',
-                'open',
-                'visibility',
-                'verify',
-                'r_count',
-                'r_avg',
-                'min_price',
-                'max_price',
-                'service_min_price',
-                'service_max_price',
-                'latitude',
-                'longitude',
-            ])
-            ->paginate($filter['perPage'] ?? 10);
-    }
+            'services.serviceExtras.translation' => fn($q) => $q
+                ->where('locale', $this->language)
+                ->select('id', 'service_extra_id', 'title', 'locale'),
+
+            'closedDates',
+            'workingDays',
+        ])
+        ->select([
+            'id',
+            'uuid',
+            'slug',
+            'logo_img',
+            'background_img',
+            'status',
+            'type',
+            'delivery_time',
+            'delivery_type',
+            'open',
+            'visibility',
+            'verify',
+            'r_count',
+            'r_avg',
+            'min_price',
+            'max_price',
+            'service_min_price',
+            'service_max_price',
+            'latitude',
+            'longitude',
+        ])
+        ->paginate($filter['perPage'] ?? 10);
+}
 
 
 
