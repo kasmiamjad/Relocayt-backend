@@ -105,10 +105,24 @@ class  ShopRepository extends CoreRepository
                     }
                 });
             })
-             ->where(function ($q) {
-                $q->whereHas('property')        // has property
-                ->orWhereHas('services');     // OR has services
+
+            // ✅ Exclude shops that have neither a property nor *filtered* services.
+            ->where(function ($q) use ($applyOnlineFilter, $applyPriceFilter, $priceRange) {
+                $q->whereHas('property') // keep shops with a property
+                ->orWhereHas('services', function ($sq) use ($applyOnlineFilter, $applyPriceFilter, $priceRange) {
+                    // when filters are active, the "services exist" branch must respect them
+                    if ($applyOnlineFilter) {
+                        $sq->where('type', 'online');
+                    }
+                    if ($applyPriceFilter) {
+                        $sq->whereBetween('price', [
+                            floatval($priceRange[0]),
+                            floatval($priceRange[1]),
+                        ]);
+                    }
+                });
             })
+
             ->with([
                 'translation' => fn($q) => $q->where('locale', $this->language),
 
@@ -152,6 +166,7 @@ class  ShopRepository extends CoreRepository
                 'longitude',
             ])
             ->paginate($filter['perPage'] ?? 10);
+
     }
 
 
