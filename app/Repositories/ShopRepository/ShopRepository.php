@@ -112,13 +112,15 @@ class  ShopRepository extends CoreRepository
             ->with([
                 'translation' => fn($q) => $q->where('locale', $this->language),
 
-                'services' => fn($q) => $q
-                    ->when($applyOnlineFilter, fn($q) => $q->where('type', 'online'))
+                'services' => function ($q) use ($applyOnlineFilter, $applyPriceFilter, $priceRange) {
+                    $q->when($applyOnlineFilter, fn($q) => $q->where('type', 'online'))
                     ->when($applyPriceFilter, fn($q) => $q->whereBetween('price', [
-                        floatval($priceRange[0]),
-                        floatval($priceRange[1]),
-                    ]))
-                    ->whereHas('translation', fn($q) => $q->where('locale', $this->language)),
+                        (float)$priceRange[0], (float)$priceRange[1],
+                    ]));
+                    // Load translation if it exists, but DON'T filter rows out when it doesn't
+                    $q->with(['translation' => fn($t) => $t->where('locale', $this->language)]);
+                },
+
 
                 'services.translation' => fn($q) => $q->where('locale', $this->language),
 
