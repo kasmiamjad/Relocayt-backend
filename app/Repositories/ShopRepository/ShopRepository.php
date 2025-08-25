@@ -86,25 +86,17 @@ class  ShopRepository extends CoreRepository
         $latitude  = data_get($filter, 'address.latitude');
         $longitude = data_get($filter, 'address.longitude');
 
-        // 🔹 service_type can be: 'online', 'offline', 'offline_in', 'offline_out', etc.
-        $serviceType       = data_get($filter, 'service_type');           // null | 'online' | 'offline' | ...
-        $applyServiceType  = !empty($serviceType);
+        // Only two valid options
+        $serviceType      = data_get($filter, 'service_type'); // 'online' | 'offline_in' | null/other
+        $applyServiceType = in_array($serviceType, ['online', 'offline_in'], true);
 
-        $priceRange        = data_get($filter, 'service_prices');
-        $applyPriceFilter  = is_array($priceRange) && count($priceRange) === 2;
+        $priceRange       = data_get($filter, 'service_prices');
+        $applyPriceFilter = is_array($priceRange) && count($priceRange) === 2;
 
-        // Reusable constraint for services
-        $applyServiceConstraints = function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
+        // Reusable constraints for services
+        $serviceConstraints = function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
             if ($applyServiceType) {
-                if ($serviceType === 'online') {
-                    $q->where('type', 'online');
-                } elseif ($serviceType === 'offline_in') {
-                    // match any offline variant
-                    $q->where('type', 'offline_in');
-                } else {
-                    // if a specific variant is sent ('offline_in' / 'offline_out' / etc.)
-                    //$q->where('type', $serviceType);
-                }
+                $q->where('type', $serviceType); // only 'online' or 'offline_in'
             }
             if ($applyPriceFilter) {
                 $q->whereBetween('price', [(float)$priceRange[0], (float)$priceRange[1]]);
@@ -112,23 +104,31 @@ class  ShopRepository extends CoreRepository
         };
 
         return $shop
-            // Main filter on services (only when a services constraint exists)
-            ->when($applyServiceType || $applyPriceFilter, function ($query) use ($applyServiceConstraints) {
-                $query->whereHas('services', $applyServiceConstraints);
+            // Apply main services filter only when there are constraints to apply
+            ->when($applyServiceType || $applyPriceFilter, function ($query) use ($serviceConstraints) {
+                $query->whereHas('services', $serviceConstraints);
             })
 
-            // Keep shops that EITHER have a property OR at least one service matching the same constraints
-            ->where(function ($q) use ($applyServiceConstraints) {
+            // Keep shops that have a property OR at least one (filtered) service.
+            // If no constraints, allow any service to satisfy existence.
+            ->where(function ($q) use ($applyServiceType, $applyPriceFilter, $serviceConstraints) {
                 $q->whereHas('property')
-                ->orWhereHas('services', $applyServiceConstraints);
+                ->when(
+                    $applyServiceType || $applyPriceFilter,
+                    fn($qq) => $qq->orWhereHas('services', $serviceConstraints),
+                    fn($qq) => $qq->orWhereHas('services')
+                );
             })
 
             ->with([
                 'translation' => fn($q) => $q->where('locale', $this->language),
 
-                'services' => fn($q) => $q
-                    ->tap($applyServiceConstraints) // apply same constraints to loaded services
-                    ->whereHas('translation', fn($q) => $q->where('locale', $this->language)),
+                'services' => function ($q) use ($applyServiceType, $applyPriceFilter, $serviceConstraints) {
+                    if ($applyServiceType || $applyPriceFilter) {
+                        $serviceConstraints($q); // apply same constraints to loaded services
+                    }
+                    $q->whereHas('translation', fn($qt) => $qt->where('locale', $this->language));
+                },
 
                 'services.translation' => fn($q) => $q->where('locale', $this->language),
 
@@ -140,13 +140,30 @@ class  ShopRepository extends CoreRepository
                 'workingDays',
             ])
             ->select([
-                'id','uuid','slug','logo_img','background_img','status','type',
-                'delivery_time','delivery_type','open','visibility','verify',
-                'r_count','r_avg','min_price','max_price','service_min_price',
-                'service_max_price','latitude','longitude',
+                'id',
+                'uuid',
+                'slug',
+                'logo_img',
+                'background_img',
+                'status',
+                'type',
+                'delivery_time',
+                'delivery_type',
+                'open',
+                'visibility',
+                'verify',
+                'r_count',
+                'r_avg',
+                'min_price',
+                'max_price',
+                'service_min_price',
+                'service_max_price',
+                'latitude',
+                'longitude',
             ])
             ->paginate($filter['perPage'] ?? 10);
     }
+
 
 
 
