@@ -153,24 +153,22 @@ class  ShopRepository extends CoreRepository
                 'latitude',
                 'longitude',
             ])->addSelect([
-                    // returns the MIN(id) of a service for this shop that matches the active filters
-                    'first_matching_service_id' => DB::table('services')
-                        ->selectRaw('MIN(id)')
-                        ->whereColumn('services.shop_id', 'shops.id')
-                        // if you only support online/offline_in, keep this in sync with your filters:
-                        ->when(in_array(data_get($filter, 'service_type'), ['online','offline_in'], true),
-                            fn($q) => $q->where('services.type', data_get($filter, 'service_type'))
-                        )
-                        ->when(
-                            is_array(data_get($filter, 'service_prices')) && count(data_get($filter, 'service_prices')) === 2,
-                            fn($q) => $q->whereBetween('services.price', [
-                                (float) data_get($filter, 'service_prices.0'),
-                                (float) data_get($filter, 'service_prices.1'),
-                            ])
-                        )
-                        // if you only want "accepted", keep this; otherwise remove it:
-                        ->where('services.status', 'accepted')
-                ])
+                'first_service_id' => DB::table('services')
+                    ->selectRaw('MIN(services.id)')
+                    ->whereColumn('services.shop_id', 'shops.id')
+                    ->when(in_array(data_get($filter, 'service_type'), ['online','offline_in'], true),
+                        fn($q) => $q->where('services.type', data_get($filter, 'service_type'))
+                    )
+                    ->when(
+                        is_array(data_get($filter, 'service_prices')) && count(data_get($filter, 'service_prices')) === 2,
+                        fn($q) => $q->whereBetween('services.price', [
+                            (float) data_get($filter, 'service_prices.0'),
+                            (float) data_get($filter, 'service_prices.1'),
+                        ])
+                    )
+                    // ❌ REMOVE this if you want IDs for 'new' rows too
+                    // ->where('services.status', 'accepted')
+            ])
             ->paginate($filter['perPage'] ?? 10);
     }
 
