@@ -98,12 +98,12 @@ class  ShopRepository extends CoreRepository
             if ($applyServiceType) {
                 if ($serviceType === 'online') {
                     $q->where('type', 'online');
-                } elseif ($serviceType === 'offline') {
+                } elseif ($serviceType === 'offline_in') {
                     // match any offline variant
-                    $q->where('type', 'like', 'offline%');
+                    $q->where('type', 'offline_in');
                 } else {
                     // if a specific variant is sent ('offline_in' / 'offline_out' / etc.)
-                    $q->where('type', $serviceType);
+                    //$q->where('type', $serviceType);
                 }
             }
             if ($applyPriceFilter) {
