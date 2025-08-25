@@ -82,52 +82,59 @@ class  ShopRepository extends CoreRepository
     Log::info('🧾 shopsPaginate filter:', $filter);
 
     /** @var Shop $shop */
-    $shop = $this->model();
+    $shop      = $this->model();
+    $latitude  = data_get($filter, 'address.latitude');
+    $longitude = data_get($filter, 'address.longitude');
 
-    $serviceType      = data_get($filter, 'service_type'); // 'online' | 'offline_in' | null
+    // Only two valid options: 'online' or 'offline_in'
+    $serviceType      = data_get($filter, 'service_type');
     $applyServiceType = in_array($serviceType, ['online', 'offline_in'], true);
 
     $priceRange       = data_get($filter, 'service_prices');
     $applyPriceFilter = is_array($priceRange) && count($priceRange) === 2;
 
-    // 🔁 One place to define ALL service constraints used everywhere
-    $serviceConstraints = function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
+    // Raw EXISTS subquery to bypass relation/global scopes; no translation constraint here.
+    $servicesExists = function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
+        $q->select(DB::raw(1))
+          ->from('services')
+          ->whereColumn('services.shop_id', 'shops.id');
+
         if ($applyServiceType) {
-            $q->where('type', $serviceType);           // only 'online' or 'offline_in'
+            $q->where('services.type', $serviceType); // 'online' or 'offline_in'
         }
         if ($applyPriceFilter) {
-            $q->whereBetween('price', [(float)$priceRange[0], (float)$priceRange[1]]);
+            $q->whereBetween('services.price', [(float)$priceRange[0], (float)$priceRange[1]]);
         }
-        // Require translation in current locale (matches your eager load)
-        $q->whereHas('translation', fn($t) => $t->where('locale', $this->language));
 
-        // (Optional but recommended) Don’t count pending/disabled services
-        $q->where('status', 'accepted');
+        // Optional: if you truly want to exclude non-accepted rows at source, uncomment:
+        // $q->where('services.status', 'accepted');
     };
 
     return $shop
-        // If any service filters are active, require at least one matching service
-        ->when($applyServiceType || $applyPriceFilter, function ($query) use ($serviceConstraints) {
-            $query->whereHas('services', $serviceConstraints);
+        // If type/price filters exist, require at least one matching service (EXISTS)
+        ->when($applyServiceType || $applyPriceFilter, function ($query) use ($servicesExists) {
+            $query->whereExists($servicesExists);
         })
 
-        // Exclude shops that have neither a property nor a (filtered) service
-        ->where(function ($q) use ($applyServiceType, $applyPriceFilter, $serviceConstraints) {
+        // Exclude shops that have neither a property nor (matching) services
+        ->where(function ($q) use ($servicesExists) {
             $q->whereHas('property')
-              ->when(
-                  $applyServiceType || $applyPriceFilter,
-                  fn($qq) => $qq->orWhereHas('services', $serviceConstraints),
-                  // when no filters, still ensure services are "valid" (translation/status)
-                  fn($qq) => $qq->orWhereHas('services', $serviceConstraints)
-              );
+              ->orWhereExists($servicesExists);
         })
 
+        // Eager-load relations for payload; apply type/price to services list,
+        // but DO NOT require translation to avoid dropping offline_in entries.
         ->with([
             'translation' => fn($q) => $q->where('locale', $this->language),
 
-            'services' => function ($q) use ($serviceConstraints, $applyServiceType, $applyPriceFilter) {
-                // Apply identical constraints so the list you return matches the inclusion logic
-                $serviceConstraints($q);
+            'services' => function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
+                if ($applyServiceType) {
+                    $q->where('type', $serviceType);
+                }
+                if ($applyPriceFilter) {
+                    $q->whereBetween('price', [(float)$priceRange[0], (float)$priceRange[1]]);
+                }
+                // don't filter by translation here; just load it below
             },
 
             'services.translation' => fn($q) => $q->where('locale', $this->language),
@@ -147,7 +154,6 @@ class  ShopRepository extends CoreRepository
         ])
         ->paginate($filter['perPage'] ?? 10);
 }
-
 
 
 
