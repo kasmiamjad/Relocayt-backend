@@ -114,6 +114,10 @@ class  ShopRepository extends CoreRepository
                         floatval($priceRange[0]),
                         floatval($priceRange[1]),
                     ]))
+                    ->where(function ($q) {
+                        $q->whereHas('property')   // shop has property
+                        ->orWhereHas('services'); // OR shop has services
+                    })
                     ->whereHas('translation', fn($q) => $q->where('locale', $this->language)),
 
                 'services.translation' => fn($q) => $q->where('locale', $this->language),
