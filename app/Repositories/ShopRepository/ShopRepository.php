@@ -84,68 +84,71 @@ class  ShopRepository extends CoreRepository
     /** @var Shop $shop */
     $shop = $this->model();
 
-    // Only two valid service types
     $serviceType      = data_get($filter, 'service_type'); // 'online' | 'offline_in' | null/other
     $applyServiceType = in_array($serviceType, ['online', 'offline_in'], true);
 
     $priceRange       = data_get($filter, 'service_prices');
     $applyPriceFilter = is_array($priceRange) && count($priceRange) === 2;
 
-    // Raw EXISTS subquery -> ignores relation/global scopes
+    // Raw EXISTS to bypass relation/global scopes, but DO enforce business constraints
     $servicesExists = function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
         $q->select(DB::raw(1))
           ->from('services')
-          ->whereColumn('services.shop_id', 'shops.id');
+          ->whereColumn('services.shop_id', 'shops.id')
+          ->whereNull('services.deleted_at')
+          ->where('services.status', 'accepted'); // adjust if your status differs
 
         if ($applyServiceType) {
-            $q->where('services.type', $serviceType); // exactly 'online' or 'offline_in'
+            $q->where('services.type', $serviceType); // 'online' or 'offline_in'
         }
         if ($applyPriceFilter) {
             $q->whereBetween('services.price', [(float)$priceRange[0], (float)$priceRange[1]]);
         }
-        // DO NOT add translation/status here — that’s what was hiding rows
     };
 
     return $shop
-        // If type/price provided, require at least one matching service (EXISTS)
+        // When type/price filters exist, require at least one matching service
         ->when($applyServiceType || $applyPriceFilter, fn($q) => $q->whereExists($servicesExists))
 
-        // Exclude shops that have neither a property nor (matching) services
+        // Exclude shops that have neither a property nor a matching service
         ->where(function ($q) use ($servicesExists) {
             $q->whereHas('property')
               ->orWhereExists($servicesExists);
         })
 
-        // Debug: how many services matched the inclusion constraints
+        // Optional: debug how many matching services you really have (helps verify)
         ->withCount([
             'services as matching_services_count' => function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
-                $q->withoutGlobalScopes();               // critical
-                if ($applyServiceType) {
-                    $q->where('type', $serviceType);
-                }
-                if ($applyPriceFilter) {
-                    $q->whereBetween('price', [(float)$priceRange[0], (float)$priceRange[1]]);
-                }
+                $q->withoutGlobalScopes()
+                  ->whereNull('deleted_at')
+                  ->where('status', 'accepted');
+                if ($applyServiceType) $q->where('type', $serviceType);
+                if ($applyPriceFilter) $q->whereBetween('price', [(float)$priceRange[0], (float)$priceRange[1]]);
             }
         ])
 
-        // Eager-load services for payload, bypassing global scopes
         ->with([
             'translation' => fn($q) => $q->where('locale', $this->language),
 
+            // IMPORTANT: don't use whereHas('translation') here — it hides rows.
+            // Load translations with LEFT semantics so services still show up.
             'services' => function ($q) use ($applyServiceType, $serviceType, $applyPriceFilter, $priceRange) {
-                $q->withoutGlobalScopes();               // critical: don’t hide offline_in
+                $q->withoutGlobalScopes()
+                  ->whereNull('deleted_at')
+                  ->where('status', 'accepted');
+
                 if ($applyServiceType) {
                     $q->where('type', $serviceType);
                 }
                 if ($applyPriceFilter) {
                     $q->whereBetween('price', [(float)$priceRange[0], (float)$priceRange[1]]);
                 }
+
+                // Load translation if present, but don't filter by it
+                $q->with(['translation' => fn($t) => $t->where('locale', $this->language)]);
             },
 
-            // load translations if present, but don't FILTER by them
-            'services.translation' => fn($q) => $q->where('locale', $this->language),
-
+            // keep extras translation (this is fine)
             'services.serviceExtras.translation' => fn($q) => $q
                 ->where('locale', $this->language)
                 ->select('id', 'service_extra_id', 'title', 'locale'),
