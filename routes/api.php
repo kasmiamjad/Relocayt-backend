@@ -295,7 +295,11 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         Route::get('parcel-orders/get-price',       [Rest\ParcelOrderSettingController::class, 'getPrice']);
 
         /* Service */
-        Route::apiResource('services',    Rest\ServiceController::class)->only(['index', 'show']);
+        Route::prefix('v1/rest')
+    ->middleware('api') // includes SubstituteBindings
+    ->group(function () {
+        Route::apiResource('services', Rest\ServiceController::class)->only(['index','show']);
+    });
 
         /* Service Extra */
         Route::apiResource('service-extras',    Rest\ServiceExtraController::class)->only(['index', 'show']);
