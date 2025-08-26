@@ -107,6 +107,9 @@ class ServiceRepository extends CoreRepository
 
     public function showById(int $id): ?Service
     {
+        Log::info('🧪 showById', [
+            'filter' => $id,
+        ]);
         return $this->model()
             ->withMax('serviceMaster', 'discount')
             ->with($this->getShowWith())->find($id);

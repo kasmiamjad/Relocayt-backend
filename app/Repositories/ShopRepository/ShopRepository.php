@@ -165,9 +165,7 @@ class  ShopRepository extends CoreRepository
                             (float) data_get($filter, 'service_prices.0'),
                             (float) data_get($filter, 'service_prices.1'),
                         ])
-                        ),
-                    // ❌ REMOVE this if you want IDs for 'new' rows too
-                    // ->where('services.status', 'accepted')
+                        )->where('services.status', 'accepted'),
                 'service_master_id' => DB::table('service_masters as sm')
                 ->join('services as s', 's.id', '=', 'sm.service_id')
                 ->whereColumn('sm.shop_id', 'shops.id')
