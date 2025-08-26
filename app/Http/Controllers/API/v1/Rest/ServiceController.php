@@ -42,6 +42,9 @@ class ServiceController extends RestBaseController
      */
     public function show(Service $service): JsonResponse
     {
+        Log::info('🧪 showById contr', [
+            'filter' => $service,
+        ]);
         return $this->successResponse(
             __('errors.' . ResponseError::NO_ERROR, locale: $this->language),
             ServiceResource::make($this->repository->show($service))
