@@ -40,7 +40,15 @@ class ServiceController extends RestBaseController
      * @param Service $service
      * @return JsonResponse
      */
-    public function show(Service $service): JsonResponse
+    public function show(string $id): JsonResponse
+    {
+        $service = \App\Models\Service::findOrFail($id);
+        return $this->successResponse(
+            __('errors.' . \App\Helpers\ResponseError::NO_ERROR, locale: $this->language),
+            \App\Http\Resources\ServiceResource::make($this->repository->show($service))
+        );
+    }
+    public function show_old(Service $service): JsonResponse
     {
         Log::info('show() — bound service', [
             'id'        => $service->getKey(),
