@@ -21,6 +21,9 @@ use Exception;
 use Google\Client;
 use Illuminate\Support\Facades\Http;
 use Throwable;
+use App\Services\EmailSettingService\EmailSendService;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 trait Notification
 {
@@ -479,40 +482,70 @@ trait Notification
      */
     public function sendAllBooking(array $bookings): void
     {
-        // Send booking confirmation email to user
         try {
-            /** @var \App\Models\Booking $booking */
-            $booking = $models[0] ?? null;
-             \Log::info('📩 Booking create request payload', [
-                'data'      => $bookings,       // raw incoming data from frontend
-            ]);
-            if ($bookings && $booking->user?->email) {
+            // Normalize to an Eloquent collection of Booking models
+            $col = collect($bookings)
+                ->filter(fn($b) => $b instanceof Booking)
+                ->values();
+
+            // If not eloquent collection, wrap it so we can use relation helpers (optional)
+            $eloquent = $col instanceof EloquentCollection
+                ? $col
+                : new EloquentCollection($col->all());
+
+            if ($eloquent->isEmpty()) {
+                \Log::warning('sendAllBooking: empty/invalid bookings array');
+                return;
+            }
+
+            // Ensure relations (often already loaded from your repo)
+            // $eloquent->loadMissing([
+            //     'user', 'shop.translation',
+            //     'service_master.service.translation',
+            //     'extras.translation', 'currency',
+            //     'transaction.paymentSystem', 'master'
+            // ]);
+
+            $first = $eloquent->first();
+            $user  = $first->user ?? null;
+
+            if (!$user || empty($user->email)) {
+                \Log::warning('sendAllBooking: user/email missing on first booking', [
+                    'booking_id' => $first?->id,
+                ]);
+            } else {
+                // Build a multi-booking payload for the email
                 $payload = [
-                    'booking_id'    => $booking->id,
-                    'service_title' => $booking->service_master?->service?->translation?->title ?? '',
-                    'shop_name'     => $booking->shop?->translation?->title ?? '',
-                    'shop_address'  => $booking->shop?->translation?->address ?? '',
-                    'start_date'    => $booking->start_date,
-                    'end_date'      => $booking->end_date,
-                    'extras'        => $booking->extras->map(fn($extra) => $extra->translation?->title)->toArray(),
-                    'total_price'   => $booking->total_price,
-                    'currency'      => $booking->currency?->symbol,
-                    'user_name'     => trim(($booking->user?->firstname ?? '') . ' ' . ($booking->user?->lastname ?? '')),
-                    'user_email'    => $booking->user?->email,
+                    'user_name' => trim(($user->firstname ?? '').' '.($user->lastname ?? '')) ?: ($user->name_or_email ?? 'Guest'),
+                    'bookings'  => $eloquent->map(function (Booking $b) {
+                        return [
+                            'booking_id'    => $b->id,
+                            'service_title' => $b->service_master?->service?->translation?->title ?? '',
+                            'master_name'   => trim(($b->master?->firstname ?? '').' '.($b->master?->lastname ?? '')),
+                            'shop_name'     => $b->shop?->translation?->title ?? '',
+                            'shop_address'  => $b->shop?->translation?->address ?? '',
+                            'start_date'    => $b->start_date,
+                            'end_date'      => $b->end_date,
+                            'extras'        => $b->extras->map(fn($e) => $e->translation?->title)->filter()->values()->toArray(),
+                            'currency'      => $b->currency?->symbol,
+                            'total_price'   => $b->total_price,
+                            'payment_tag'   => $b->transaction?->paymentSystem?->tag,
+                            'status'        => $b->status,
+                        ];
+                    })->toArray(),
                 ];
 
-                app(\App\Services\EmailSettingService\EmailSendService::class)
-                    ->sendBookingConfirmation($payload, $booking->user);
-
-                Log::info('📩 Booking email shoot');
+                $resp = app(EmailSendService::class)->sendBookingConfirmationList($payload, $user);
+                \Log::info('📧 Booking confirmation email attempt', ['resp' => $resp, 'to' => $user->email]);
             }
         } catch (\Throwable $e) {
-            \Log::error("❌ Failed to send booking confirmation email", ['error' => $e->getMessage()]);
+            \Log::error('❌ sendAllBooking email error', ['error' => $e->getMessage()]);
         }
 
-        $this->bookingUserMaster($bookings);
-        $this->bookingUserMaster($bookings);
-        $this->bookingSeller($bookings);
+        // Follow-up notifications
+    $this->bookingUserMaster($bookings);
+            $this->bookingUserMaster($bookings);
+            $this->bookingSeller($bookings);
     }
 
     /**
