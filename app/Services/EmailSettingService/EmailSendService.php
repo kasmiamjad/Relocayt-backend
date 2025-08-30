@@ -523,4 +523,60 @@ class EmailSendService extends CoreService
         }
         return $mail;
     }
+    
+    public function sendBookingConfirmation(array $data, User $user): array
+    {
+        $emailSetting = EmailSetting::find(3); // or default setting
+
+        if (!$emailSetting) {
+            \Log::error('EmailSetting not found for booking confirmation.');
+            return [
+                'status' => false,
+                'message' => 'Email settings not found',
+                'code' => ResponseError::ERROR_404,
+            ];
+        }
+
+        $mail = $this->emailBaseAuth($emailSetting, $user);
+
+        try {
+            $html = "
+                <h2>Booking Confirmation #{$data['booking_id']}</h2>
+                <p>Dear {$data['user_name']},</p>
+                <p>Thank you for your booking at <strong>{$data['shop_name']}</strong>.</p>
+                <p><strong>Service:</strong> {$data['service_title']}</p>
+                <p><strong>Shop Address:</strong> {$data['shop_address']}</p>
+                <p><strong>Check-in:</strong> {$data['start_date']}</p>
+                <p><strong>Check-out:</strong> {$data['end_date']}</p>";
+
+            if (!empty($data['extras'])) {
+                $html .= "<p><strong>Extras:</strong> " . implode(', ', $data['extras']) . "</p>";
+            }
+
+            $html .= "
+                <p><strong>Total Price:</strong> {$data['currency']} {$data['total_price']}</p>
+                <p>We look forward to hosting you.</p>
+            ";
+
+            $mail->Subject = "Booking Confirmation #{$data['booking_id']}";
+            $mail->Body    = $this->wrapEmailLayout($html);
+            $mail->AltBody = strip_tags($html);
+            $mail->isHTML(true);
+
+            $mail->send();
+
+            return [
+                'status' => true,
+                'code' => ResponseError::NO_ERROR,
+            ];
+        } catch (Exception $e) {
+            \Log::error("Booking email error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+                'code' => ResponseError::ERROR_504,
+            ];
+        }
+    }
+
 }

@@ -479,6 +479,33 @@ trait Notification
      */
     public function sendAllBooking(array $bookings): void
     {
+        // Send booking confirmation email to user
+        try {
+            /** @var \App\Models\Booking $booking */
+            $booking = $models[0] ?? null;
+
+            if ($booking && $booking->user?->email) {
+                $payload = [
+                    'booking_id'    => $booking->id,
+                    'service_title' => $booking->service_master?->service?->translation?->title ?? '',
+                    'shop_name'     => $booking->shop?->translation?->title ?? '',
+                    'shop_address'  => $booking->shop?->translation?->address ?? '',
+                    'start_date'    => $booking->start_date,
+                    'end_date'      => $booking->end_date,
+                    'extras'        => $booking->extras->map(fn($extra) => $extra->translation?->title)->toArray(),
+                    'total_price'   => $booking->total_price,
+                    'currency'      => $booking->currency?->symbol,
+                    'user_name'     => trim(($booking->user?->firstname ?? '') . ' ' . ($booking->user?->lastname ?? '')),
+                    'user_email'    => $booking->user?->email,
+                ];
+
+                app(\App\Services\EmailSettingService\EmailSendService::class)
+                    ->sendBookingConfirmation($payload, $booking->user);
+            }
+        } catch (\Throwable $e) {
+            \Log::error("❌ Failed to send booking confirmation email", ['error' => $e->getMessage()]);
+        }
+
         $this->bookingUserMaster($bookings);
         $this->bookingUserMaster($bookings);
         $this->bookingSeller($bookings);
