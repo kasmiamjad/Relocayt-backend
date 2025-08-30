@@ -501,6 +501,8 @@ trait Notification
 
                 app(\App\Services\EmailSettingService\EmailSendService::class)
                     ->sendBookingConfirmation($payload, $booking->user);
+
+                Log::info('📩 Booking email shoot');
             }
         } catch (\Throwable $e) {
             \Log::error("❌ Failed to send booking confirmation email", ['error' => $e->getMessage()]);
