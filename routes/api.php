@@ -101,6 +101,9 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     Route::post('/auth/email/send-booking-email',          [BookingEmailController::class, 'send'])
         ->middleware('sessions');
 
+    Route::post('/auth/forgot/email-password',          [LoginController::class, 'forgetPasswordEmail'])
+    ->middleware('sessions');
+
     Route::post('/auth/forgot/email-password/{hash}',   [LoginController::class, 'forgetPasswordVerifyEmail'])
         ->middleware('sessions');
 
