@@ -29,6 +29,7 @@ use Throwable;
 use DB;
 use App\Models\Shop;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -312,11 +313,17 @@ class LoginController extends Controller
      * @param ReSendVerifyRequest $request
      * @return JsonResponse
      */
+    use Illuminate\Support\Facades\Log;
+
     public function forgetPasswordEmail(ReSendVerifyRequest $request): JsonResponse
     {
         $user = User::where('email', $request->input('email'))->first();
 
         if (!$user) {
+            Log::warning('ForgetPasswordEmail: User not found', [
+                'email' => $request->input('email')
+            ]);
+
             return $this->onErrorResponse([
                 'code'    => ResponseError::ERROR_404,
                 'message' => __('errors.' . ResponseError::ERROR_404, locale: $this->language),
@@ -325,9 +332,21 @@ class LoginController extends Controller
 
         $token = mb_substr((string)time(), -6, 6);
 
+        Log::info('ForgetPasswordEmail: Generated token', [
+            'user_id' => $user->id,
+            'email'   => $user->email,
+            'token'   => $token,
+        ]);
+
         $result = (new EmailSendService)->sendEmailPasswordReset($user, $token);
 
+        Log::info('ForgetPasswordEmail: Email send result', [
+            'status'  => data_get($result, 'status'),
+            'message' => data_get($result, 'message'),
+        ]);
+
         if (!data_get($result, 'status')) {
+            Log::error('ForgetPasswordEmail: Failed to send email', $result);
             return $this->onErrorResponse($result);
         }
 
@@ -335,8 +354,14 @@ class LoginController extends Controller
             'verify_token' => $token
         ]);
 
+        Log::info('ForgetPasswordEmail: Token updated in user record', [
+            'user_id' => $user->id,
+            'verify_token' => $token
+        ]);
+
         return $this->successResponse('Verify code send');
     }
+
 
     /**
      * @param int $hash
