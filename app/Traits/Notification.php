@@ -484,9 +484,9 @@ trait Notification
             /** @var \App\Models\Booking $booking */
             $booking = $models[0] ?? null;
              \Log::info('📩 Booking create request payload', [
-                'data'      => $booking,       // raw incoming data from frontend
+                'data'      => $bookings,       // raw incoming data from frontend
             ]);
-            if ($booking && $booking->user?->email) {
+            if ($bookings && $booking->user?->email) {
                 $payload = [
                     'booking_id'    => $booking->id,
                     'service_title' => $booking->service_master?->service?->translation?->title ?? '',
