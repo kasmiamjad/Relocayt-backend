@@ -554,7 +554,6 @@ class EmailSendService extends CoreService
                         <h3 style="margin:0 0 8px;">Booking #'.e($b['booking_id']).'</h3>
                         <p style="margin:6px 0;"><strong>Service:</strong> '.e($b['service_title']).'</p>
                         '.(!empty($b['master_name']) ? '<p style="margin:6px 0;"><strong>Host:</strong> '.e($b['master_name']).'</p>' : '').'
-                        <p style="margin:6px 0;"><strong>Shop:</strong> '.e($b['shop_name']).'</p>
                         <p style="margin:6px 0;"><strong>Address:</strong> '.e($b['shop_address']).'</p>
                         <p style="margin:6px 0;"><strong>Start:</strong> '.e($b['start_date']).'</p>
                         <p style="margin:6px 0;"><strong>End:</strong> '.e($b['end_date']).'</p>
@@ -571,7 +570,7 @@ class EmailSendService extends CoreService
             $userName = e($data['user_name'] ?? $user->name_or_email ?? 'Guest');
 
             $html = "
-                <h2 style='margin:0 0 12px;'>Your Booking Confirmation</h2>
+                <h2 style='margin:0 0 12px;'>Your Booking Request is Pending</h2>
                 <p style='margin:0 0 18px;'>Dear {$userName},</p>
                 <p style='margin:0 0 18px;'>Thank you for your booking. Below are your booking details:</p>
                 {$bookingsHtml}
@@ -579,7 +578,9 @@ class EmailSendService extends CoreService
             ";
 
             $firstId = $data['bookings'][0]['booking_id'] ?? '';
-            $mail->Subject = 'Booking Confirmation #'.$firstId;
+            $mail->Subject = $isPending
+            ? ('Booking Request Received – Pending Host Confirmation #'.$firstId)
+            : ('Booking Confirmation #'.$firstId);
             $mail->Body    = $this->wrapEmailLayout($html);
             $mail->AltBody = strip_tags($html);
             $mail->isHTML(true);
