@@ -526,7 +526,7 @@ class EmailSendService extends CoreService
     public function sendBookingConfirmationList(array $data, User $user): array
     {
         // Use your preferred email setting row; `first()` is safest
-        $emailSetting = EmailSetting::first();
+        $emailSetting = EmailSetting::find(3);
         $mail = $this->emailBaseAuth($emailSetting, $user);
 
         try {
