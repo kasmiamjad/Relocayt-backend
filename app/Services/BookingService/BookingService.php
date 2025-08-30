@@ -45,6 +45,13 @@ class BookingService extends CoreService
     public function create(array $data): array
     {
         $calculate = [];
+        \Log::info('📩 Booking create request payload', [
+            'data'      => $data,       // raw incoming data from frontend
+            'calculated'=> $calculate,  // after calculate()
+            'models'    => $models,     // Booking models just created
+        ]);
+
+        dd();
 
         try {
             $models = DB::transaction(function () use ($data, $calculate) {
