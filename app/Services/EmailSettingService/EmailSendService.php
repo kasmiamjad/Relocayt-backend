@@ -523,60 +523,83 @@ class EmailSendService extends CoreService
         }
         return $mail;
     }
-    
-    public function sendBookingConfirmation(array $data, User $user): array
+    public function sendBookingConfirmationList(array $data, User $user): array
     {
-        $emailSetting = EmailSetting::find(3); // or default setting
-
-        if (!$emailSetting) {
-            \Log::error('EmailSetting not found for booking confirmation.');
-            return [
-                'status' => false,
-                'message' => 'Email settings not found',
-                'code' => ResponseError::ERROR_404,
-            ];
-        }
-
+        // Use your preferred email setting row; `first()` is safest
+        $emailSetting = EmailSetting::first();
         $mail = $this->emailBaseAuth($emailSetting, $user);
 
         try {
-            $html = "
-                <h2>Booking Confirmation #{$data['booking_id']}</h2>
-                <p>Dear {$data['user_name']},</p>
-                <p>Thank you for your booking at <strong>{$data['shop_name']}</strong>.</p>
-                <p><strong>Service:</strong> {$data['service_title']}</p>
-                <p><strong>Shop Address:</strong> {$data['shop_address']}</p>
-                <p><strong>Check-in:</strong> {$data['start_date']}</p>
-                <p><strong>Check-out:</strong> {$data['end_date']}</p>";
+            // Optional debug (set to 0 in prod)
+            // $mail->SMTPDebug = 2;
+            // $mail->Debugoutput = function($str, $level) { \Log::debug("SMTP [$level]: $str"); };
 
-            if (!empty($data['extras'])) {
-                $html .= "<p><strong>Extras:</strong> " . implode(', ', $data['extras']) . "</p>";
+            // Build bookings HTML
+            $bookingsHtml = '';
+            foreach ($data['bookings'] as $b) {
+                $extrasHtml = '';
+                if (!empty($b['extras'])) {
+                    $items = array_map(fn($t) => '<li>'.e($t).'</li>', $b['extras']);
+                    $extrasHtml = '<p style="margin:12px 0 6px;"><strong>Extras:</strong></p><ul style="margin:8px 0 0 18px;">'
+                                . implode('', $items) . '</ul>';
+                }
+
+                $currency = e($b['currency'] ?? '');
+                $total    = number_format((float)($b['total_price'] ?? 0), 2);
+
+                $bookingsHtml .= '
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px; border:1px solid #eee; border-radius:8px;">
+                    <tr>
+                        <td style="padding:16px 20px;">
+                        <h3 style="margin:0 0 8px;">Booking #'.e($b['booking_id']).'</h3>
+                        <p style="margin:6px 0;"><strong>Service:</strong> '.e($b['service_title']).'</p>
+                        '.(!empty($b['master_name']) ? '<p style="margin:6px 0;"><strong>Host:</strong> '.e($b['master_name']).'</p>' : '').'
+                        <p style="margin:6px 0;"><strong>Shop:</strong> '.e($b['shop_name']).'</p>
+                        <p style="margin:6px 0;"><strong>Address:</strong> '.e($b['shop_address']).'</p>
+                        <p style="margin:6px 0;"><strong>Start:</strong> '.e($b['start_date']).'</p>
+                        <p style="margin:6px 0;"><strong>End:</strong> '.e($b['end_date']).'</p>
+                        '.$extrasHtml.'
+                        <p style="margin:12px 0 0;"><strong>Total:</strong> '.$currency.' '.$total.'</p>
+                        '.(!empty($b['payment_tag']) ? '<p style="margin:6px 0 0;"><strong>Payment:</strong> '.e(strtoupper($b['payment_tag'])).'</p>' : '').'
+                        '.(!empty($b['status']) ? '<p style="margin:6px 0 0;"><strong>Status:</strong> '.e(ucfirst($b['status'])).'</p>' : '').'
+                        </td>
+                    </tr>
+                    </table>
+                ';
             }
 
-            $html .= "
-                <p><strong>Total Price:</strong> {$data['currency']} {$data['total_price']}</p>
-                <p>We look forward to hosting you.</p>
+            $userName = e($data['user_name'] ?? $user->name_or_email ?? 'Guest');
+
+            $html = "
+                <h2 style='margin:0 0 12px;'>Your Booking Confirmation</h2>
+                <p style='margin:0 0 18px;'>Dear {$userName},</p>
+                <p style='margin:0 0 18px;'>Thank you for your booking. Below are your booking details:</p>
+                {$bookingsHtml}
+                <p style='margin:18px 0 0;'>We look forward to hosting you.</p>
             ";
 
-            $mail->Subject = "Booking Confirmation #{$data['booking_id']}";
+            $firstId = $data['bookings'][0]['booking_id'] ?? '';
+            $mail->Subject = 'Booking Confirmation #'.$firstId;
             $mail->Body    = $this->wrapEmailLayout($html);
             $mail->AltBody = strip_tags($html);
             $mail->isHTML(true);
 
-            $mail->send();
+            $ok = $mail->send();
 
             return [
-                'status' => true,
-                'code' => ResponseError::NO_ERROR,
+                'status'  => (bool)$ok,
+                'code'    => $ok ? ResponseError::NO_ERROR : ResponseError::ERROR_504,
+                'message' => $ok ? 'sent' : $mail->ErrorInfo,
             ];
-        } catch (Exception $e) {
-            \Log::error("Booking email error: " . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Booking confirmation email error', ['message' => $e->getMessage()]);
             return [
-                'status' => false,
+                'status'  => false,
+                'code'    => ResponseError::ERROR_504,
                 'message' => $e->getMessage(),
-                'code' => ResponseError::ERROR_504,
             ];
         }
     }
+
 
 }
