@@ -92,9 +92,6 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     Route::post('/auth/forgot/password',                [LoginController::class, 'forgetPassword'])
         ->middleware('sessions');
 
-    Route::post('/auth/forgot/password',                [LoginController::class, 'forgetPassword'])
-        ->middleware('sessions');
-
     Route::post('/auth/forgot/password/before',        [LoginController::class, 'forgetPasswordBefore'])
         ->middleware('sessions');
 
