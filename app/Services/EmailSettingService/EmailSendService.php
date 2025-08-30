@@ -498,19 +498,19 @@ class EmailSendService extends CoreService
             ]
         ];
         
-        // Log::debug('PHPMailer Settings:', [
-        //     'SMTPAuth'    => $mail->SMTPAuth,
-        //     'Host'        => $mail->Host,
-        //     'Port'        => $mail->Port,
-        //     'Username'    => $mail->Username,
-        //     'Password'    => $mail->Password, // ⚠️ sensitive, remove after debugging
-        //     'SMTPSecure'  => $mail->SMTPSecure,
-        //     'From'        => $emailSetting->from_to,
-        //     'From Name'   => $emailSetting->from_site,
-        //     'CharSet'     => $mail->CharSet,
-        //     'IsHTML'      => $emailSetting,
-        //     'SSL Options' => $mail->SMTPOptions,
-        // ]);
+        Log::debug('PHPMailer Settings:', [
+            'SMTPAuth'    => $mail->SMTPAuth,
+            'Host'        => $mail->Host,
+            'Port'        => $mail->Port,
+            'Username'    => $mail->Username,
+            'Password'    => $mail->Password, // ⚠️ sensitive, remove after debugging
+            'SMTPSecure'  => $mail->SMTPSecure,
+            'From'        => $emailSetting->from_to,
+            'From Name'   => $emailSetting->from_site,
+            'CharSet'     => $mail->CharSet,
+            'IsHTML'      => $emailSetting,
+            'SSL Options' => $mail->SMTPOptions,
+        ]);
 
         try {
 
