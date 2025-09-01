@@ -602,5 +602,58 @@ class EmailSendService extends CoreService
         }
     }
 
+    public function sendVerificationSubmitted(User $user, array $data): array
+    {
+        // pick the setting you actually want; `first()` is safest
+        $emailSetting = EmailSetting::first();
+        $mail = $this->emailBaseAuth($emailSetting, $user);
+
+        try {
+            // Optional debug (set to 0 in prod)
+            // $mail->SMTPDebug = 2;
+            // $mail->Debugoutput = function($str, $level) { \Log::debug("SMTP[$level]: $str"); };
+
+            $primary   = (int)($data['primaryCount']   ?? 0);
+            $secondary = (int)($data['secondaryCount'] ?? 0);
+
+            $userName = e($user->name_or_email ?? trim(($user->firstname ?? '').' '.($user->lastname ?? '')) ?: 'User');
+
+            $html = "
+                <h2 style='margin:0 0 12px;'>Verification Documents Received</h2>
+                <p style='margin:0 0 18px;'>Dear {$userName},</p>
+                <p style='margin:0 0 18px;'>Thanks for submitting your verification documents. Your request is <strong>pending review</strong>. We’ll notify you once it’s reviewed.</p>
+
+                <div style='margin:18px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px;'>
+                <p style='margin:0;'><strong>Submitted:</strong></p>
+                <ul style='margin:8px 0 0 18px;'>
+                    <li>Primary documents: {$primary}</li>
+                    <li>Secondary documents: {$secondary}</li>
+                </ul>
+                </div>
+
+                <p style='margin:18px 0 0;'>If we need anything else, we’ll reach out via email.</p>
+            ";
+
+            $mail->Subject = 'Verification Documents Received — Pending Review';
+            $mail->Body    = $this->wrapEmailLayout($html);
+            $mail->AltBody = strip_tags($html);
+            $mail->isHTML(true);
+
+            $ok = $mail->send();
+            Log::error('Verification email success', ['message' => $ok]);
+            return [
+                'status'  => (bool)$ok,
+                'code'    => $ok ? ResponseError::NO_ERROR : ResponseError::ERROR_504,
+                'message' => $ok ? 'sent' : $mail->ErrorInfo,
+            ];
+        } catch (\Throwable $e) {
+            \Log::error('Verification email error', ['message' => $e->getMessage()]);
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_504,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
 
 }

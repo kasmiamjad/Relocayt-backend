@@ -365,6 +365,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             Route::put('profile/update',                        [User\ProfileController::class, 'update']);
             Route::put('profile/personal-info',                 [User\ProfileController::class, 'personalInfo']);
             Route::put('profile/verification-documents',        [User\ProfileController::class, 'submitVerificationDocs']);
+            
             Route::put('profile/lang/update',                   [User\ProfileController::class, 'langUpdate']);
             Route::put('profile/currency/update',               [User\ProfileController::class, 'currencyUpdate']);
             Route::delete('profile/delete',                     [User\ProfileController::class, 'delete']);

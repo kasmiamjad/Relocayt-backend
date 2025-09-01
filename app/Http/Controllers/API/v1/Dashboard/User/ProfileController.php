@@ -21,6 +21,8 @@ use App\Services\UserServices\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Services\EmailSettingService\EmailSendService;
 
 class ProfileController extends UserBaseController
 {
@@ -180,11 +182,11 @@ class ProfileController extends UserBaseController
    public function submitVerificationDocs(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'primary_doc' => 'nullable|array|min:1',
-            'primary_doc.*' => 'string|url',
-            'secondary_doc' => 'nullable|array|min:1',
-            'secondary_doc.*' => 'string|url',
-            'consent' => 'nullable|boolean',
+            'primary_doc'      => 'nullable|array|min:1',
+            'primary_doc.*'    => 'string|url',
+            'secondary_doc'    => 'nullable|array|min:1',
+            'secondary_doc.*'  => 'string|url',
+            'consent'          => 'nullable|boolean',
         ]);
 
         $user = auth('sanctum')->user();
@@ -206,7 +208,7 @@ class ProfileController extends UserBaseController
         }
 
         if (array_key_exists('consent', $validated)) {
-            $dataToUpdate['verification_consent'] = $validated['consent'];
+            $dataToUpdate['verification_consent'] = (bool) $validated['consent'];
         }
 
         if (empty($dataToUpdate)) {
@@ -217,10 +219,38 @@ class ProfileController extends UserBaseController
 
         $user->update($dataToUpdate);
 
+        // --- Send email (non-blocking for the API response) ---
+        $primaryCount   = is_array($validated['primary_doc']   ?? null) ? count($validated['primary_doc'])   : 0;
+        $secondaryCount = is_array($validated['secondary_doc'] ?? null) ? count($validated['secondary_doc']) : 0;
+
+        try {
+            /** @var EmailSendService $mailer */
+            $mailer = app(EmailSendService::class);
+
+            $resp = $mailer->sendVerificationSubmitted($user, [
+                'primaryCount'   => $primaryCount,
+                'secondaryCount' => $secondaryCount,
+            ]);
+
+            if (empty($resp['status'])) {
+                Log::warning('Verification email failed to send', [
+                    'user_id' => $user->id,
+                    'resp'    => $resp,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Verification email exception', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+        // ------------------------------------------------------
+
         return response()->json([
             'message' => 'Verification documents submitted successfully.',
         ]);
     }
+
 
 /**
      * Remove the specified resource from storage.
