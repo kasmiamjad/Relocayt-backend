@@ -163,7 +163,7 @@ class ShopService extends CoreService
                 ]);
                 throw new \RuntimeException('User creation failed - could not extract user ID');
             }
-            Log::info('DATA --> ', ['DATA' => $data]);
+            //Log::info('DATA --> ', ['DATA' => $data]);
             try {
                 $coverImage = data_get($data, 'coverImage');
                 $property = Property::create([
@@ -214,10 +214,10 @@ class ShopService extends CoreService
                         ];
                     }, $data['galleryImages']);
 
-                    Log::info('Inserting gallery records', [
-                        'property_id' => $property->id,
-                        'records'     => $galleryRecords,
-                    ]);
+                    // Log::info('Inserting gallery records', [
+                    //     'property_id' => $property->id,
+                    //     'records'     => $galleryRecords,
+                    // ]);
 
                     $property->galleries()->createMany($galleryRecords);
                 }
@@ -229,7 +229,7 @@ class ShopService extends CoreService
                 ]);
 
                 // Delete master user and related wallet/invitations if needed
-                User::where('id', $masterId)->delete();
+                User::where('id', $userId)->delete();
 
                 // Delete the shop
                 $shop->delete();
@@ -256,10 +256,23 @@ class ShopService extends CoreService
                     'gender'         => 1,
                     'interval'       => 30,
                     'pause'          => 12,
+                    'slug'           => Str::slug(data_get($data, 'title.en')) . '-' . rand(100,999),
                     'price'          => data_get($data, 'price_per_night'),
                     'shop_id'        => $shop->id,
                     'status'         => data_get($data, 'status', 'new'),
+                    'service_type'   => 'Accommodation',
                     'type'           => data_get($data, 'type', 'offline_in'),
+                    'latitude'       => data_get($data, 'location.lat', 1),
+                    'longitude'      => data_get($data, 'location.lng', 1),
+                    'address'        => data_get($data, 'address.en', 'NA'),
+                    'city'           => data_get($data, 'city'),
+                    'state'          => data_get($data, 'state'),
+                    'country'        => data_get($data, 'country'),
+                    'street'         => data_get($data, 'street'),
+                    'zipcode'        => data_get($data, 'zipcode'),
+                    'background_img' => data_get($data, 'background_img'),
+                    'documents'      => data_get($data, 'documents.0'),
+                    'property_id'    => $property->id,
                 ]);
 
                 $service->translations()->create([
@@ -288,7 +301,7 @@ class ShopService extends CoreService
             }
 
              // Log::debug('Raw API response', ['Service' => $service]);
-             $serviceArray = is_array($service) ? $service : json_decode(json_encode($service), true);
+            $serviceArray = is_array($service) ? $service : json_decode(json_encode($service), true);
              // SAFEST WAY TO GET USER ID - handles all possible response formats
             $serviceId = null;
             
@@ -331,6 +344,59 @@ class ShopService extends CoreService
                 // Optional rollback logic here if you want to clean up service/shop/master/etc
                 throw $e;
             }
+
+            // ✅ Send "listing created" email to the seller (non-blocking for API)
+            try {
+                /** @var \App\Services\EmailSettingService\EmailSendService $mailer */
+                $mailer = app(\App\Services\EmailSettingService\EmailSendService::class);
+
+                $payload = [
+                    'shop' => [
+                        'id'    => $shop->id,
+                        'slug'  => $shop->slug,
+                        'title' => $shop->translation?->title,
+                        'address' => $shop->translation?->address,
+                    ],
+                    'property' => [
+                        'id'       => $property->id ?? null,
+                        'title'    => data_get($data, 'title.en'),
+                        'slug'     => $property->slug ?? null,
+                        'status'   => $property->status ?? 'inactive',
+                        'city'     => $property->city ?? null,
+                        'country'  => $property->country ?? null,
+                        'price_per_night' => data_get($data, 'price_per_night'),
+                        'currency' => data_get($data, 'currency'),
+                        'min_nights' => data_get($data, 'min_nights'),
+                        'max_nights' => data_get($data, 'max_nights'),
+                        'check_in_time'  => data_get($data, 'check_in_time'),
+                        'check_out_time' => data_get($data, 'check_out_time'),
+                    ],
+                    'service' => [
+                        'id'     => $service->id ?? null,
+                        'price'  => $service->price ?? null,
+                        'status' => $service->status ?? null,
+                        'type'   => $service->type ?? null,
+                    ],
+                    'service_master' => [
+                        'id'        => data_get($serviceMaster, 'data.App\\Models\\ServiceMaster.id') 
+                                    ?? data_get($serviceMaster, 'data.id') 
+                                    ?? data_get($serviceMaster, 'id'),
+                        'price'     => data_get($serviceMaster, 'price'),
+                        'interval'  => data_get($serviceMaster, 'interval'),
+                        'pause'     => data_get($serviceMaster, 'pause'),
+                        'type'      => data_get($serviceMaster, 'type'),
+                    ],
+                ];
+
+                $resp = $mailer->sendListingCreated($seller, $payload);
+
+                if (empty($resp['status'])) {
+                    \Log::warning('Listing created email failed', ['resp' => $resp, 'seller_id' => $seller->id]);
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Listing created email exception', ['error' => $e->getMessage()]);
+            }
+
 
             return [
                 'status' => true,

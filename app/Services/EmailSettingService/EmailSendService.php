@@ -605,7 +605,7 @@ class EmailSendService extends CoreService
     public function sendVerificationSubmitted(User $user, array $data): array
     {
         // pick the setting you actually want; `first()` is safest
-        $emailSetting = EmailSetting::first();
+        $emailSetting = EmailSetting::find(3);
         $mail = $this->emailBaseAuth($emailSetting, $user);
 
         try {
@@ -648,6 +648,132 @@ class EmailSendService extends CoreService
             ];
         } catch (\Throwable $e) {
             \Log::error('Verification email error', ['message' => $e->getMessage()]);
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_504,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    public function sendListingCreated(User $user, array $data): array
+    {
+        // Pick your configured row; `first()` is safer unless you use a specific ID.
+        $emailSetting = EmailSetting::find(3);
+        $mail = $this->emailBaseAuth($emailSetting, $user);
+
+        try {
+            // Optional debug while testing:
+            // $mail->SMTPDebug = 2;
+            // $mail->Debugoutput = function($str, $level) { \Log::debug("SMTP[$level] $str"); };
+
+            $shop     = $data['shop'] ?? [];
+            $property = $data['property'] ?? [];
+            $service  = $data['service'] ?? [];
+            $sm       = $data['service_master'] ?? [];
+
+            $userName = e($user->name_or_email ?? trim(($user->firstname ?? '').' '.($user->lastname ?? '')) ?: 'Host');
+
+            // If property is inactive by default, reflect that tone
+            $isPending = strtolower((string)($property['status'] ?? 'inactive')) !== 'active';
+
+            $header = $isPending
+                ? "<h2 style='margin:0 0 12px;'>Your listing was created — pending activation</h2>"
+                : "<h2 style='margin:0 0 12px;'>Your listing is live</h2>";
+
+            $shopHtml = "
+                <p style='margin:6px 0;'><strong>Shop:</strong> ".e($shop['title'] ?? '')."</p>
+                <p style='margin:6px 0;'><strong>Slug:</strong> ".e($shop['slug'] ?? '')."</p>
+                <p style='margin:6px 0;'><strong>Address:</strong> ".e($shop['address'] ?? '')."</p>
+            ";
+
+            $propertyHtml = "
+                <p style='margin:6px 0;'><strong>Property:</strong> ".e($property['title'] ?? '')."</p>
+                <p style='margin:6px 0;'><strong>Slug:</strong> ".e($property['slug'] ?? '')."</p>
+                <p style='margin:6px 0;'><strong>Status:</strong> ".e($property['status'] ?? '')."</p>
+                <p style='margin:6px 0;'><strong>Location:</strong> ".e(($property['city'] ?? '').', '.($property['country'] ?? ''))."</p>
+                <p style='margin:6px 0;'><strong>Price per night:</strong> ".e(($property['currency'] ?? '')).' '.e((string)($property['price_per_night'] ?? ''))."</p>
+                <p style='margin:6px 0;'><strong>Min/Max nights:</strong> ".e((string)($property['min_nights'] ?? '')).' / '.e((string)($property['max_nights'] ?? ''))."</p>
+                <p style='margin:6px 0;'><strong>Check-in/out:</strong> ".e((string)($property['check_in_time'] ?? '')).' / '.e((string)($property['check_out_time'] ?? ''))."</p>
+            ";
+
+            $serviceHtml = "
+                <p style='margin:6px 0;'><strong>Service ID:</strong> ".e((string)($service['id'] ?? ''))."</p>
+                <p style='margin:6px 0;'><strong>Status/Type:</strong> ".e((string)($service['status'] ?? ''))." / ".e((string)($service['type'] ?? ''))."</p>
+                <p style='margin:6px 0;'><strong>Base price:</strong> ".e((string)($service['price'] ?? ''))."</p>
+            ";
+
+            $smHtml = "
+                <p style='margin:6px 0;'><strong>Service Master ID:</strong> ".e((string)($sm['id'] ?? ''))."</p>
+                <p style='margin:6px 0;'><strong>Price / Interval / Pause:</strong> "
+                .e((string)($sm['price'] ?? ''))." / ".e((string)($sm['interval'] ?? ''))." / ".e((string)($sm['pause'] ?? ''))."</p>
+                <p style='margin:6px 0;'><strong>Type:</strong> ".e((string)($sm['type'] ?? ''))."</p>
+            ";
+
+            $nextHtml = $isPending
+                ? "
+                    <div style='margin:18px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px;'>
+                    <p style='margin:0 0 8px;'><strong>What happens next?</strong></p>
+                    <ul style='margin:0 0 0 18px;'>
+                        <li>Our team reviews your listing for quality and policy compliance.</li>
+                        <li>We’ll email you once your listing is activated.</li>
+                        <li>You can update details anytime from your dashboard.</li>
+                    </ul>
+                    </div>
+                "
+                : '';
+
+            $html = "
+                {$header}
+                <p style='margin:0 0 18px;'>Dear {$userName},</p>
+                <p style='margin:0 18px 18px 0;'>Your listing was created with the following details:</p>
+
+                <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
+                <h3 style='margin:0 0 8px;'>Shop</h3>
+                {$shopHtml}
+                </div>
+
+                <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
+                <h3 style='margin:0 0 8px;'>Property</h3>
+                {$propertyHtml}
+                </div>
+
+                <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
+                <h3 style='margin:0 0 8px;'>Service</h3>
+                {$serviceHtml}
+                </div>
+
+                <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
+                <h3 style='margin:0 0 8px;'>Service Master</h3>
+                {$smHtml}
+                </div>
+
+                {$nextHtml}
+
+                <p style='margin:18px 0 0;'>Have questions? Just reply to this email.</p>
+            ";
+
+            $subject = $isPending
+                ? 'Your listing was created — pending activation'
+                : 'Your listing is live';
+
+            $mail->Subject = $subject;
+            $mail->Body    = $this->wrapEmailLayout($html);
+            $mail->AltBody = strip_tags($html);
+            $mail->isHTML(true);
+
+            // Optional: notify internal team
+            // $mail->addBCC('hosts@relocayt.ca', 'Host Ops');
+
+            $ok = $mail->send();
+
+            return [
+                'status'  => (bool)$ok,
+                'code'    => $ok ? ResponseError::NO_ERROR : ResponseError::ERROR_504,
+                'message' => $ok ? 'sent' : $mail->ErrorInfo,
+            ];
+        } catch (\Throwable $e) {
+            \Log::error('Listing created email error', ['message' => $e->getMessage()]);
             return [
                 'status'  => false,
                 'code'    => ResponseError::ERROR_504,
