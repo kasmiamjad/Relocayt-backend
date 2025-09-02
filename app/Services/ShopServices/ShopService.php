@@ -229,7 +229,7 @@ class ShopService extends CoreService
                 ]);
 
                 // Delete master user and related wallet/invitations if needed
-                User::where('id', $userId)->delete();
+                User::where('id', $masterId)->delete();
 
                 // Delete the shop
                 $shop->delete();
