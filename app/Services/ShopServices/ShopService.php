@@ -186,8 +186,8 @@ class ShopService extends CoreService
                     'landmark'         => data_get($data, 'landmark'), // NEW
                     'district'         => data_get($data, 'district'), // NEW
                     'zipcode'          => data_get($data, 'zipcode'),
-                    'latitude'         => data_get($data, 'location.lat', 1),
-                    'longitude'        => data_get($data, 'location.lng', 1),
+                    'latitude'         => data_get($data, 'lat_long.latitude', 1),
+                    'longitude'        => data_get($data, 'lat_long.longitude', 1),
                     'price_per_night'  => data_get($data, 'price_per_night'),
                     'currency'         => data_get($data, 'currency'),
                     'min_nights'       => data_get($data, 'min_nights'),
@@ -252,25 +252,28 @@ class ShopService extends CoreService
             try {
                 $service = \App\Models\Service::create([
                     'category_id'    => 133,
+                    'master_id'        => $userId,
                     'commission_fee' => 1,
                     'gender'         => 1,
                     'interval'       => 30,
                     'pause'          => 12,
+                    'title'            => data_get($data, 'title.en'), // or another source
+                    'description'      => data_get($data, 'description.en'),
                     'slug'           => Str::slug(data_get($data, 'title.en')) . '-' . rand(100,999),
                     'price'          => data_get($data, 'price_per_night'),
                     'shop_id'        => $shop->id,
                     'status'         => data_get($data, 'status', 'new'),
                     'service_type'   => 'Accommodation',
                     'type'           => data_get($data, 'type', 'offline_in'),
-                    'latitude'       => data_get($data, 'location.lat', 1),
-                    'longitude'      => data_get($data, 'location.lng', 1),
+                    'latitude'         => data_get($data, 'lat_long.latitude', 1),
+                    'longitude'        => data_get($data, 'lat_long.longitude', 1),
                     'address'        => data_get($data, 'address.en', 'NA'),
                     'city'           => data_get($data, 'city'),
                     'state'          => data_get($data, 'state'),
                     'country'        => data_get($data, 'country'),
                     'street'         => data_get($data, 'street'),
                     'zipcode'        => data_get($data, 'zipcode'),
-                    'background_img' => data_get($data, 'background_img'),
+                    'img'        => data_get($data, 'background_img'),
                     'property_id'    => $property->id,
                 ]);
 
