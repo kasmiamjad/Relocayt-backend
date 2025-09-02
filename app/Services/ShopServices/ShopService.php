@@ -713,11 +713,7 @@ class ShopService extends CoreService
                 // --- Service relations ---
                 optional($service->translations())->delete();
                 optional($service->galleries())->delete();
-                optional($service->faqs())->delete();
-                if (method_exists($service, 'tags')) {
-                    $service->tags()->detach();
-                }
-
+               
                 // Delete ServiceMaster first (breaks most FKs cleanly)
                 $sm->delete();
 
