@@ -766,7 +766,7 @@ class EmailSendService extends CoreService
             // $mail->addBCC('hosts@relocayt.ca', 'Host Ops');
 
             $ok = $mail->send();
-
+            Log::error('Accomodation email success', ['message' => $ok]);
             return [
                 'status'  => (bool)$ok,
                 'code'    => $ok ? ResponseError::NO_ERROR : ResponseError::ERROR_504,
