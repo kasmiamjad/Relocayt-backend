@@ -708,16 +708,6 @@ class ShopService extends CoreService
             // Infer property if not provided
             $propertyId = $data['property_id'] ?? $service->property_id ?? $sm->shop?->property?->id ?? null;
 
-            // 🚧 Block delete if there are pending/active bookings
-            $blockStatuses = ['approved']; // adjust to your flow
-            $hasActive = Booking::where('service_master_id', $sm->id)
-                ->whereIn('status', $blockStatuses)
-                ->exists();
-
-            if ($hasActive) {
-                throw new Exception('Cannot delete: there are active/pending bookings for this accommodation.');
-            }
-
             DB::transaction(function () use ($sm, $service, $propertyId) {
 
                 // --- Service relations ---
