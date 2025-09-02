@@ -158,7 +158,19 @@ class ShopController extends SellerBaseController
             'master_id'         => 'nullable|integer|exists:users,id',
         ]);
 
-        $resp = $this->shopService->deleteAccommodation($validated);
+       // $resp = $this->shopService->deleteAccommodation($validated);
+
+        try {
+            $resp = $this->shopService->deleteAccommodation($validated);
+            return response()->json($resp, $resp['status'] ? 200 : 422);
+        } catch (\Throwable $e) {
+            \Log::error('Delete listing failed', [
+                'ids'     => $validated,
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+            throw $e; // or return 500 json
+        }
 
         return response()->json($resp, $resp['status'] ? 200 : 422);
     }
