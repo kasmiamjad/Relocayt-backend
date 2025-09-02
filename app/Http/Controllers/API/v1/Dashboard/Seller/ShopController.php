@@ -17,6 +17,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Throwable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;            // ✅ add this
 
 class ShopController extends SellerBaseController
 {
