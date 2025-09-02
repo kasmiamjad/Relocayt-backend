@@ -680,62 +680,91 @@ class ShopService extends CoreService
     public function deleteAccommodation(array $data): array
     {
         try {
+            /** @var User|null $user */
             $user = auth('sanctum')->user();
             if (!$user) {
-                throw new Exception(__('errors.' . ResponseError::ERROR_401, locale: $this->language));
+                return [
+                    'status'  => false,
+                    'code'    => ResponseError::ERROR_401,
+                    'message' => __('errors.' . ResponseError::ERROR_401, locale: $this->language),
+                ];
             }
 
-            if (empty($data['service_master_id']) || empty($data['service_id'])) {
-                throw new Exception(__('errors.' . ResponseError::ERROR_400, locale: $this->language));
+            // Accept both camelCase and snake_case coming from FE
+            $serviceMasterId = (int)($data['service_master_id'] ?? $data['serviceMasterId'] ?? 0);
+            $serviceId       = (int)($data['service_id']        ?? $data['serviceId']        ?? 0);
+            $propertyId      = $data['property_id'] ?? $data['propertyId'] ?? null;
+            $shopId          = $data['shop_id']     ?? $data['shopId']     ?? null;
+
+            if ($serviceMasterId <= 0 || $serviceId <= 0) {
+                return [
+                    'status'  => false,
+                    'code'    => ResponseError::ERROR_400,
+                    'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language),
+                ];
             }
 
             /** @var ServiceMaster $sm */
-            $sm = ServiceMaster::with('shop')->findOrFail((int)$data['service_master_id']);
+            $sm = ServiceMaster::with('shop')->findOrFail($serviceMasterId);
 
-            // ✔️ Ensure the accommodation belongs to the authenticated seller
+            // Ownership check – seller must own the shop
             if ((int)($sm->shop?->user_id) !== (int)$user->id) {
-                throw new Exception(__('errors.' . ResponseError::ERROR_403, locale: $this->language));
+                return [
+                    'status'  => false,
+                    'code'    => ResponseError::ERROR_403,
+                    'message' => __('errors.' . ResponseError::ERROR_403, locale: $this->language),
+                ];
             }
 
-            // Optional shop sanity check
-            if (!empty($data['shop_id']) && (int)$data['shop_id'] !== (int)$sm->shop_id) {
-                throw new Exception('service_master_id does not belong to the given shop_id');
+            if (!empty($shopId) && (int)$shopId !== (int)$sm->shop_id) {
+                return [
+                    'status'  => false,
+                    'code'    => ResponseError::ERROR_400,
+                    'message' => 'service_master_id does not belong to the given shop_id',
+                ];
             }
 
             /** @var Service $service */
-            $service = Service::findOrFail((int)$data['service_id']);
+            $service = Service::findOrFail($serviceId);
+
+            // Make sure this ServiceMaster actually points to this Service
+            if ((int)$sm->service_id !== (int)$service->id) {
+                return [
+                    'status'  => false,
+                    'code'    => ResponseError::ERROR_400,
+                    'message' => 'service_master_id and service_id do not match.',
+                ];
+            }
 
             // Infer property if not provided
-            $propertyId = $data['property_id'] ?? $service->property_id ?? $sm->shop?->property?->id ?? null;
+            $propertyId = $propertyId ?? $service->property_id ?? null;
 
             DB::transaction(function () use ($sm, $service, $propertyId) {
+                // Bypass model events/accessors to avoid mb_substr array errors
+                Model::withoutEvents(function () use ($sm, $service, $propertyId) {
+                    // --- Service side cleanups ---
+                    // Delete related translations/galleries via relations (safe; no events fired)
+                    $service->translations()->delete();
+                    $service->galleries()->delete();
 
-                // --- Service relations ---
-                optional($service->translations())->delete();
-                optional($service->galleries())->delete();
-               
-                // Delete ServiceMaster first (breaks most FKs cleanly)
-                $sm->delete();
+                    // Delete ServiceMaster first to break FKs
+                    ServiceMaster::whereKey($sm->id)->delete();
 
-                // Delete Service
-                $service->delete();
+                    // Delete the Service
+                    Service::whereKey($service->id)->delete();
 
-                // --- Property & pivots ---
-                if ($propertyId) {
-                    /** @var Property|null $property */
-                    $property = Property::find($propertyId);
-                    if ($property) {
-                        // amenity pivot
-                        DB::table('amenity_property')->where('property_id', $property->id)->delete();
-                        // galleries
-                        optional($property->galleries())->delete();
-                        $property->delete();
+                    // --- Property & pivots ---
+                    if ($propertyId) {
+                        if ($property = Property::find($propertyId)) {
+                            // amenity pivot
+                            DB::table('amenity_property')->where('property_id', $property->id)->delete();
+                            // galleries
+                            $property->galleries()->delete();
+                            // property itself
+                            Property::whereKey($property->id)->delete();
+                        }
                     }
-                }
-
-                // NOTE: We intentionally DO NOT delete the master user here.
-                // If you ever need to, ensure no other service_masters exist for that user
-                // and no FKs (e.g. property.master_id) remain.
+                });
             });
 
             return [
@@ -745,7 +774,18 @@ class ShopService extends CoreService
             ];
 
         } catch (\Throwable $e) {
-            $this->error($e);
+            \Log::error('Delete listing failed', [
+                'message' => $e->getMessage(),
+                // keep trace small in logs
+                'trace'   => collect($e->getTrace())->take(6),
+                'payload' => [
+                    'service_master_id' => $data['service_master_id'] ?? $data['serviceMasterId'] ?? null,
+                    'service_id'        => $data['service_id']        ?? $data['serviceId']        ?? null,
+                    'property_id'       => $data['property_id']       ?? $data['propertyId']       ?? null,
+                    'shop_id'           => $data['shop_id']           ?? $data['shopId']           ?? null,
+                ],
+            ]);
+
             return [
                 'status'  => false,
                 'code'    => ResponseError::ERROR_501,
