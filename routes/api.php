@@ -654,6 +654,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             Route::put('shops',                     [Seller\ShopController::class, 'shopUpdate']);
             Route::post('shops/working/status',     [Seller\ShopController::class, 'setWorkingStatus']);
 
+            Route::delete('shops/accommodation',    [Seller\ShopController::class, 'destroy']);
+
             /* Shop Socials */
             Route::apiResource('shop-socials',Seller\ShopSocialController::class);
             Route::delete('shop-socials/delete',    [Seller\ShopSocialController::class, 'destroy']);

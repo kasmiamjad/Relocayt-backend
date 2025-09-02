@@ -676,4 +676,102 @@ class ShopService extends CoreService
             'data'   => $shop,
         ];
     }
+
+    public function deleteAccommodation(array $data): array
+    {
+        try {
+            $user = auth('sanctum')->user();
+            if (!$user) {
+                throw new Exception(__('errors.' . ResponseError::ERROR_401, locale: $this->language));
+            }
+
+            if (empty($data['service_master_id']) || empty($data['service_id'])) {
+                throw new Exception(__('errors.' . ResponseError::ERROR_400, locale: $this->language));
+            }
+
+            /** @var ServiceMaster $sm */
+            $sm = ServiceMaster::with('shop')->findOrFail((int)$data['service_master_id']);
+
+            // ✔️ Ensure the accommodation belongs to the authenticated seller
+            if ((int)($sm->shop?->user_id) !== (int)$user->id) {
+                throw new Exception(__('errors.' . ResponseError::ERROR_403, locale: $this->language));
+            }
+
+            // Optional shop sanity check
+            if (!empty($data['shop_id']) && (int)$data['shop_id'] !== (int)$sm->shop_id) {
+                throw new Exception('service_master_id does not belong to the given shop_id');
+            }
+
+            /** @var Service $service */
+            $service = Service::findOrFail((int)$data['service_id']);
+
+            // Infer property if not provided
+            $propertyId = $data['property_id'] ?? $service->property_id ?? $sm->shop?->property?->id ?? null;
+
+            // 🚧 Block delete if there are pending/active bookings
+            $blockStatuses = ['approved']; // adjust to your flow
+            $hasActive = Booking::where('service_master_id', $sm->id)
+                ->whereIn('status', $blockStatuses)
+                ->exists();
+
+            if ($hasActive) {
+                throw new Exception('Cannot delete: there are active/pending bookings for this accommodation.');
+            }
+
+            DB::transaction(function () use ($sm, $service, $propertyId) {
+
+                // --- Service relations ---
+                optional($service->translations())->delete();
+                optional($service->galleries())->delete();
+                optional($service->extras())->delete();
+                optional($service->faqs())->delete();
+                if (method_exists($service, 'tags')) {
+                    $service->tags()->detach();
+                }
+
+                // --- ServiceMaster relations ---
+                if (method_exists($sm, 'extras')) {
+                    // delete rows; use ->detach() if it's a pivot
+                    $sm->extras()->delete();
+                }
+
+                // Delete ServiceMaster first (breaks most FKs cleanly)
+                $sm->delete();
+
+                // Delete Service
+                $service->delete();
+
+                // --- Property & pivots ---
+                if ($propertyId) {
+                    /** @var Property|null $property */
+                    $property = Property::find($propertyId);
+                    if ($property) {
+                        // amenity pivot
+                        DB::table('amenity_property')->where('property_id', $property->id)->delete();
+                        // galleries
+                        optional($property->galleries())->delete();
+                        $property->delete();
+                    }
+                }
+
+                // NOTE: We intentionally DO NOT delete the master user here.
+                // If you ever need to, ensure no other service_masters exist for that user
+                // and no FKs (e.g. property.master_id) remain.
+            });
+
+            return [
+                'status'  => true,
+                'code'    => ResponseError::NO_ERROR,
+                'message' => 'Accommodation deleted successfully.',
+            ];
+
+        } catch (\Throwable $e) {
+            $this->error($e);
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_501,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
 }

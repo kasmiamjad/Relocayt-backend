@@ -147,9 +147,19 @@ class ShopController extends SellerBaseController
      * @param int $id
      * @return void
      */
-    public function destroy(int $id): void
+    public function destroy(Request $request): \Illuminate\Http\JsonResponse
     {
-        //
+        $validated = $request->validate([
+            'service_master_id' => 'required|integer|exists:service_masters,id',
+            'service_id'        => 'required|integer|exists:services,id',
+            'property_id'       => 'nullable|integer|exists:property,id',
+            'shop_id'           => 'nullable|integer|exists:shops,id',
+            'master_id'         => 'nullable|integer|exists:users,id',
+        ]);
+
+        $resp = $this->shopService->deleteAccommodation($validated);
+
+        return response()->json($resp, $resp['status'] ? 200 : 422);
     }
     
 }
