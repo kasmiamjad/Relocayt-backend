@@ -271,7 +271,6 @@ class ShopService extends CoreService
                     'street'         => data_get($data, 'street'),
                     'zipcode'        => data_get($data, 'zipcode'),
                     'background_img' => data_get($data, 'background_img'),
-                    'documents'      => data_get($data, 'documents.0'),
                     'property_id'    => $property->id,
                 ]);
 
@@ -293,11 +292,23 @@ class ShopService extends CoreService
                 ]);
 
                 // Cleanup all previously created entities
-                User::where('id', $userId)->delete();
-                $shop->delete();
-                $property->delete();
+                try {
+                    if (isset($property)) {
+                        // also detach galleries/amenities if not cascaded
+                        // $property->galleries()->delete(); // only if not ON DELETE CASCADE
+                        $property->delete();
+                    }
 
-                throw $e;
+                    if (isset($shop)) {
+                        $shop->delete();
+                    }
+
+                    if (!empty($userId)) {
+                        User::where('id', $userId)->delete();
+                    }
+                } catch (\Throwable $e2) {
+                    \Log::error('Rollback cleanup failed', ['error' => $e2->getMessage()]);
+                }
             }
 
              // Log::debug('Raw API response', ['Service' => $service]);
