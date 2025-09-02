@@ -578,9 +578,7 @@ class EmailSendService extends CoreService
             ";
 
             $firstId = $data['bookings'][0]['booking_id'] ?? '';
-            $mail->Subject = $isPending
-            ? ('Booking Request Received – Pending Host Confirmation #'.$firstId)
-            : ('Booking Confirmation #'.$firstId);
+            $mail->Subject = 'Booking Request Received – Pending Host Confirmation #'.$firstId;
             $mail->Body    = $this->wrapEmailLayout($html);
             $mail->AltBody = strip_tags($html);
             $mail->isHTML(true);
