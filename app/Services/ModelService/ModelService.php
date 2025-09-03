@@ -217,7 +217,7 @@ class ModelService extends CoreService
     public function update(Service $service, array $data): array
     {
         try {
-            \Log::info('Hardcoded Service ID:', ['id' => $service->id]);
+            //Log::info('Hardcoded Service ID:', ['id' => $service->id]);
 
             // ✅ Direct SQL-level update
           $updated = DB::table('services')

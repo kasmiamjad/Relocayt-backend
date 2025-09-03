@@ -138,7 +138,7 @@ class ServiceController extends AdminBaseController
 
         \Log::info("Updating service ID: {$id}");
         
-        Log::info("Requesting service : {$service}, request: {$request}", $validated );
+        //Log::info("Requesting service : {$service}, request: {$request}", $validated );
         
         $result = $this->service->update($service, $validated);
 
