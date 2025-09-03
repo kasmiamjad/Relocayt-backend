@@ -51,17 +51,7 @@ Route::get('/debug', function () {
     ]);
 });
 
-// Route::get('/test-mail', function () {
-//     Mail::raw('Hello! This is a test email via Amazon SES SMTP.', function ($message) {
-//         $message->to('kasmi.amjad@gmail.com')
-//                 ->subject('SES Test Email');
-//     });
-
-//     return 'Email sent!';
-// });
-
 Route::get('v1/rest/amenities', [AmenityController::class, 'index']);
-
 
 Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     // Methods without AuthCheck
