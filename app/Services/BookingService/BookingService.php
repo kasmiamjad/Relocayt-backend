@@ -177,11 +177,11 @@ class BookingService extends CoreService
                     }
 
                 }
-                 \Log::info('📩 Booking create request payload', [
-                    'data'      => $data,       // raw incoming data from frontend
-                    'calculated'=> $calculate,  // after calculate()
-                    'models'    => $models,     // Booking models just created
-                ]);
+                //  \Log::info('📩 Booking create request payload', [
+                //     'data'      => $data,       // raw incoming data from frontend
+                //     'calculated'=> $calculate,  // after calculate()
+                //     'models'    => $models,     // Booking models just created
+                // ]);
                 $this->sendAllBooking($models);
 
                 return $models;
