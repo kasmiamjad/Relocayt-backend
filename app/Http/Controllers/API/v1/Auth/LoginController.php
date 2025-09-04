@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+namespace App\Http\Controllers\API\v1\Auth;
 namespace App\Services\EmailSettingService;
 
 use App\Helpers\ResponseError;
