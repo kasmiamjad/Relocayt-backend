@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace App\Http\Controllers\API\v1\Auth;
+namespace App\Services;
 
 use App\Helpers\ResponseError;
 use App\Http\Controllers\Controller;
@@ -14,7 +15,7 @@ use App\Http\Requests\Auth\ReSendVerifyRequest;
 use App\Http\Requests\FilterParamsRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService\AuthByMobilePhone;
-use App\Services\EmailSettingService\EmailSendService;
+use App\Services\EmailSendService;
 use App\Services\UserServices\UserService;
 use App\Services\UserServices\UserWalletService;
 use Illuminate\Http\JsonResponse;
