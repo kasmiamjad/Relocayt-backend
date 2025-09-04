@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace App\Services\EmailSettingService;
+namespace App\Services;
 
 use App\Helpers\ResponseError;
 use App\Models\EmailSetting;
@@ -21,6 +22,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Storage;
 use Throwable;
 use View;
+use SendGrid;
+use SendGrid\Mail\Mail;
 
 class EmailSendService extends CoreService
 {
@@ -88,13 +91,13 @@ class EmailSendService extends CoreService
             foreach ($emailTemplate->galleries as $gallery) {
                 /** @var Gallery $gallery */
                 try {
-                    $mail->addAttachment(request()->getHttpHost() . '/storage/' . $gallery->path);
+                    //$mail->addAttachment(request()->getHttpHost() . '/storage/' . $gallery->path);
                 } catch (Throwable) {
                     Log::error($mail->ErrorInfo);
                 }
             }
 
-            $mail->send();
+            // $mail->send();
 
             return [
                 'status' => true,
@@ -107,6 +110,44 @@ class EmailSendService extends CoreService
                 'message'   => $mail->ErrorInfo,
                 'status'    => false,
                 'code'      => ResponseError::ERROR_504,
+            ];
+        }
+    }
+
+    public function send($to, $subject, $body, $attachments = [])
+    {
+        try {
+            $email = new Mail();
+            $email->setFrom(config('mail.from.address'), config('mail.from.name'));
+            $email->setSubject($subject);
+            $email->addTo($to);
+            $email->addContent("text/html", $body);
+
+            // Optional: Add attachments
+            foreach ($attachments as $filePath) {
+                if (file_exists($filePath)) {
+                    $email->addAttachment(
+                        base64_encode(file_get_contents($filePath)),
+                        mime_content_type($filePath),
+                        basename($filePath),
+                        "attachment"
+                    );
+                }
+            }
+
+            $sendgrid = new SendGrid(env('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($email);
+
+            return [
+                'status' => $response->statusCode(),
+                'body'   => $response->body(),
+                'headers'=> $response->headers()
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'status' => 500,
+                'error'  => $e->getMessage()
             ];
         }
     }
@@ -205,71 +246,74 @@ class EmailSendService extends CoreService
             </html>
             HTML;
     }
+
     public function sendEmailPasswordReset(User $user, $str): array
     {
         $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_RESET_PASSWORD)->first();
 
-        $mail = $this->emailBaseAuth($emailTemplate?->emailSetting, $user);
-
         try {
             $resetCode = $str;
 
-            // Default HTML body for password reset
+            // Default HTML body
             $defaultHtml = <<<HTML
             <h2 style="text-align:center; margin-top: 0;">Reset your password</h2>
-
             <p style="text-align:center; font-size:16px; color:#444; margin: 20px 0;">
-            We received a request to reset your password. Use the code below to proceed:
+                We received a request to reset your password. Use the code below to proceed:
             </p>
-
             <div style="text-align:center; margin: 30px 0;">
-            <span style="display:inline-block; padding:12px 28px; background:#38bdf8; color:#ffffff; font-size:20px; font-weight:bold; border-radius:6px;">
-                $resetCode
-            </span>
+                <span style="display:inline-block; padding:12px 28px; background:#38bdf8; color:#ffffff; font-size:20px; font-weight:bold; border-radius:6px;">
+                    $resetCode
+                </span>
             </div>
             HTML;
 
             // Default plain text fallback
             $defaultAlt = "Reset your password\n\nUse this code to reset your password: $resetCode";
 
+            // Load from template if available
             $bodyTemplate = data_get($emailTemplate, 'body', $defaultHtml);
             $altTemplate  = data_get($emailTemplate, 'alt_body', $defaultAlt);
 
             $bodyWithCode = str_replace('$verify_code', $resetCode, $bodyTemplate);
             $altWithCode  = str_replace('$verify_code', $resetCode, $altTemplate);
 
-            $mail->Subject = $resetCode . " - Reset Your Password";
-            $mail->Body    = $this->wrapEmailLayout($bodyWithCode);
-            $mail->AltBody = $altWithCode;
-            $mail->isHTML(true);
-            $mail->SMTPDebug = 2; // Verbose debug output (set to 0 in production)
-            $mail->Debugoutput = function($str, $level) {
-                Log::debug("SMTP [$level]: $str");
-            };
-            // Log::info('Password reset email body', [
-            //     'body' => $mail->Body,
-            //     'alt' => $mail->AltBody
-            // ]);
+            // Build SendGrid email
+            $email = new SendGridMail();
+            $email->setFrom(config('mail.from.address'), config('mail.from.name'));
+            $email->setSubject($resetCode . " - Reset Your Password");
+            $email->addTo($user->email, $user->firstname ?? 'User');
+            $email->addContent("text/plain", $altWithCode);
+            $email->addContent("text/html", $this->wrapEmailLayout($bodyWithCode));
 
-            if (!$mail->send()) {
-                Log::error('Password reset email failed', ['error' => $mail->ErrorInfo]);
-            } else {
-                //Log::info('Password reset email sent successfully to ' . $user->email);
+            $sendgrid = new SendGrid(env('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($email);
+
+            // Check response
+            if (!in_array($response->statusCode(), [200, 202])) {
+                \Log::error('Password reset email failed', [
+                    'status' => $response->statusCode(),
+                    'body'   => $response->body()
+                ]);
+                return [
+                    'status' => false,
+                    'code'   => ResponseError::ERROR_504,
+                    'message'=> 'SendGrid failed with status ' . $response->statusCode(),
+                ];
             }
 
             return [
                 'status' => true,
-                'code' => ResponseError::NO_ERROR,
+                'code'   => ResponseError::NO_ERROR,
             ];
-        } catch (Exception $e) {
-            Log::error('ErrorInfo', [
-                $mail->ErrorInfo
+
+        } catch (\Exception $e) {
+            \Log::error('Password reset email exception', [
+                'error' => $e->getMessage()
             ]);
-            $this->error($e);
             return [
-                'message' => $mail->ErrorInfo,
-                'status'  => false,
-                'code'    => ResponseError::ERROR_504,
+                'status' => false,
+                'code'   => ResponseError::ERROR_504,
+                'message'=> $e->getMessage(),
             ];
         }
     }
