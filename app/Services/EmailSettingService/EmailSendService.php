@@ -274,7 +274,7 @@ class EmailSendService extends CoreService
 
             // ✅ Create SendGrid Mail object
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("info@relocayt.ca", "Relocayt");
+            $email->setFrom("np-reply@relocayt.ca", "Relocayt");
             $email->setSubject("{$resetCode} - Reset Your Password");
             $email->addTo($user->email, $user->firstname ?? 'User');
             $email->addContent("text/plain", $altWithCode);
