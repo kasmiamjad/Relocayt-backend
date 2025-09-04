@@ -14,7 +14,7 @@ use App\Http\Requests\Auth\ReSendVerifyRequest;
 use App\Http\Requests\FilterParamsRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService\AuthByMobilePhone;
-use App\Services\EmailSendService; 
+use App\Services\EmailSettingService\EmailSendService;
 use App\Services\UserServices\UserService;
 use App\Services\UserServices\UserWalletService;
 use Illuminate\Http\JsonResponse;
