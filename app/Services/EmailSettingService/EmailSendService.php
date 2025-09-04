@@ -277,7 +277,7 @@ class EmailSendService extends CoreService
             $altWithCode  = str_replace('$verify_code', $resetCode, $altTemplate);
 
             // Build SendGrid email
-            $email = new SendGridMail();
+            $mail = new Mail();
             $email->setFrom(config('mail.from.address'), config('mail.from.name'));
             $email->setSubject($resetCode . " - Reset Your Password");
             $email->addTo($user->email, $user->firstname ?? 'User');
