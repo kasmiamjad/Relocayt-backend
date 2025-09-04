@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\API\v1\Dashboard\Admin\ServiceController;
 use App\Http\Controllers\API\v1\Rest\ShopController;
-use App\Http\Controllers\API\v1\BookingEmailController;
 use App\Http\Controllers\API\v1\Dashboard\Master\ServiceMasterController;
 
 /*
@@ -24,32 +23,30 @@ use App\Http\Controllers\API\v1\Dashboard\Master\ServiceMasterController;
 |
 */
 
-Route::middleware([])->post('/send-booking-email',  [BookingEmailController::class, 'send'])->middleware('throttle:5,1');
+//Route::get('/test-shop', [ShopController::class, 'paginate']);
+// Route::get('/debug-log-test', function () {
+//     throw new \Exception('💥 Test crash to verify logging works');
+// });
 
-Route::get('/test-shop', [ShopController::class, 'paginate']);
-Route::get('/debug-log-test', function () {
-    throw new \Exception('💥 Test crash to verify logging works');
-});
+// Route::get('/debug-ping', function () {
+//     Log::info('CHECK API LOGGED HERE.......');
+//     return response()->json(['message' => '✅ Reached route']);
+// });
+// // die('api.php loaded');
 
-Route::get('/debug-ping', function () {
-    Log::info('CHECK API LOGGED HERE.......');
-    return response()->json(['message' => '✅ Reached route']);
-});
-// die('api.php loaded');
+// Route::middleware([])->get('/ping', function () {
+//     return response()->json(['status' => 'API is working!']);
+// });
 
-Route::middleware([])->get('/ping', function () {
-    return response()->json(['status' => 'API is working!']);
-});
-
-Route::get('/debug', function () {
-    return response()->json([
-        'env' => app()->environment(),
-        'debug' => config('app.debug'),
-        'base_path' => base_path(),
-        'storage_path' => storage_path(),
-        'log_path' => storage_path('logs/laravel.log'),
-    ]);
-});
+// Route::get('/debug', function () {
+//     return response()->json([
+//         'env' => app()->environment(),
+//         'debug' => config('app.debug'),
+//         'base_path' => base_path(),
+//         'storage_path' => storage_path(),
+//         'log_path' => storage_path('logs/laravel.log'),
+//     ]);
+// });
 
 Route::get('v1/rest/amenities', [AmenityController::class, 'index']);
 
@@ -86,9 +83,6 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         ->middleware('sessions');
 
     Route::post('/auth/forgot/password/confirm',        [LoginController::class, 'forgetPasswordVerify'])
-        ->middleware('sessions');
-
-    Route::post('/auth/email/send-booking-email',          [BookingEmailController::class, 'send'])
         ->middleware('sessions');
 
     Route::post('/auth/forgot/email-password',          [LoginController::class, 'forgetPasswordEmail'])
