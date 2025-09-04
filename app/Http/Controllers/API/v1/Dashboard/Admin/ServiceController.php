@@ -136,9 +136,9 @@ class ServiceController extends AdminBaseController
             return response()->json(['status' => false, 'message' => 'Service not found'], 404);
         }
 
-        \Log::info("Updating service ID: {$id}");
+        Log::info("Updating service ID: {$id}");
         
-        //Log::info("Requesting service : {$service}, request: {$request}", $validated );
+        Log::info("Requesting service : {$service}, request: {$request}", $validated );
         
         $result = $this->service->update($service, $validated);
 
