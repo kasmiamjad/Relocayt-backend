@@ -219,7 +219,7 @@ class ProfileController extends UserBaseController
 
         $user->update($dataToUpdate);
 
-        // --- Send email (non-blocking for the API response) ---
+        // --- Send email (fire-and-forget style) ---
         $primaryCount   = is_array($validated['primary_doc']   ?? null) ? count($validated['primary_doc'])   : 0;
         $secondaryCount = is_array($validated['secondary_doc'] ?? null) ? count($validated['secondary_doc']) : 0;
 
@@ -247,11 +247,9 @@ class ProfileController extends UserBaseController
         // ------------------------------------------------------
 
         return response()->json([
-            'message' => 'Verification documents submitted successfully.',
+            'message' => 'Verification documents submitted successfully. A confirmation email has been sent.',
         ]);
     }
-
-
 /**
      * Remove the specified resource from storage.
      *
