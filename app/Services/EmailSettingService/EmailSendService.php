@@ -349,6 +349,31 @@ class EmailSendService extends CoreService
         }
     }
 
+    public function sendContactMessage(array $data): array
+    {
+        $subject = "New Contact Form Submission – {$data['firstName']} {$data['lastName']}";
+        $html = "
+            <h2>Contact Form Submission</h2>
+            <p><strong>Name:</strong> {$data['firstName']} {$data['lastName']}</p>
+            <p><strong>Email:</strong> {$data['email']}</p>
+            <p><strong>Phone:</strong> {$data['phone']}</p>
+            <p><strong>Message:</strong></p>
+            <p>{$data['message']}</p>
+        ";
+        $plain = "Name: {$data['firstName']} {$data['lastName']}\n"
+            . "Email: {$data['email']}\n"
+            . "Phone: {$data['phone']}\n\n"
+            . "Message:\n{$data['message']}";
+
+        // ✅ only this class can call protected function
+        return $this->sendWithSendGrid(
+            "hello@relocayt.com",
+            "Relocayt Team",
+            $subject,
+            $html,
+            $plain
+        );
+    }
 
     public function sendEmailPasswordReset_old(User $user, $str): array
     {
