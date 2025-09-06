@@ -367,7 +367,7 @@ class EmailSendService extends CoreService
 
         // ✅ only this class can call protected function
         return $this->sendWithSendGrid(
-            "hello@relocayt.com",
+            "kasmi.amjad@gmail.com",
             "Relocayt Team",
             $subject,
             $html,

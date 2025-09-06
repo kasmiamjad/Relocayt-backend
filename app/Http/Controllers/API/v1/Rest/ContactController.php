@@ -68,7 +68,13 @@ class ContactController extends Controller
                 . "Our team will reply soon.\n\n"
                 . "Best regards,\nRelocayt Team";
 
-        $result = (new EmailSendService())->sendContactMessage($validated);
+        (new EmailSendService())->sendWithSendGrid(
+            $validated['email'],
+            "{$validated['firstName']} {$validated['lastName']}",
+            $ackSubject,
+            $ackHtml,
+            $ackPlain
+        );
 
         return response()->json([
             'status' => true,
