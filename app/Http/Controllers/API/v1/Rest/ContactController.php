@@ -30,11 +30,12 @@ class ContactController extends Controller
         ";
 
         $plain = "Name: {$validated['firstName']} {$validated['lastName']}\n"
-               . "Email: {$validated['email']}\n"
-               . "Phone: {$validated['phone']}\n\n"
-               . "Message:\n{$validated['message']}";
+            . "Email: {$validated['email']}\n"
+            . "Phone: {$validated['phone']}\n\n"
+            . "Message:\n{$validated['message']}";
 
-        $result = (new EmailSendService())->sendWithSendGrid(
+        // ✅ 1. Send to admin
+        $adminResult = (new EmailSendService())->sendWithSendGrid(
             "kasmi.amjad@gmail.com",
             "Relocayt Team",
             $subject,
@@ -42,18 +43,43 @@ class ContactController extends Controller
             $plain
         );
 
-        if (!data_get($result, 'status')) {
+        if (!data_get($adminResult, 'status')) {
             return response()->json([
                 'status' => false,
                 'code'   => ResponseError::ERROR_504,
-                'message'=> 'Failed to send contact email',
-                'debug'  => $result,
+                'message'=> 'Failed to send contact email to admin',
+                'debug'  => $adminResult,
             ], 500);
         }
 
+        // ✅ 2. Send acknowledgement to user
+        $ackSubject = "Thank you for contacting Relocayt";
+        $ackHtml = "
+            <h2>Hi {$validated['firstName']},</h2>
+            <p>Thank you for reaching out to <strong>Relocayt</strong>. We have received your message and our team will get back to you soon.</p>
+            <p><strong>Your message:</strong></p>
+            <blockquote style='border-left:3px solid #38bdf8; margin:10px 0; padding-left:10px; color:#555;'>{$validated['message']}</blockquote>
+            <p>Best regards,<br>Relocayt Team</p>
+        ";
+
+        $ackPlain = "Hi {$validated['firstName']},\n\n"
+                . "Thank you for contacting Relocayt. We have received your message:\n\n"
+                . "{$validated['message']}\n\n"
+                . "Our team will reply soon.\n\n"
+                . "Best regards,\nRelocayt Team";
+
+        (new EmailSendService())->sendWithSendGrid(
+            $validated['email'],
+            "{$validated['firstName']} {$validated['lastName']}",
+            $ackSubject,
+            $ackHtml,
+            $ackPlain
+        );
+
         return response()->json([
             'status' => true,
-            'message'=> 'Message sent successfully!',
+            'message'=> 'Message sent successfully! A confirmation email has been sent.',
         ]);
     }
+
 }
