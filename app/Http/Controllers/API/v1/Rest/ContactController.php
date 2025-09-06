@@ -35,13 +35,8 @@ class ContactController extends Controller
             . "Message:\n{$validated['message']}";
 
         // ✅ 1. Send to admin
-        $adminResult = (new EmailSendService())->sendWithSendGrid(
-            "kasmi.amjad@gmail.com",
-            "Relocayt Team",
-            $subject,
-            $html,
-            $plain
-        );
+        $adminResult = (new EmailSendService())->sendContactMessage($validated);
+
 
         if (!data_get($adminResult, 'status')) {
             return response()->json([
@@ -68,13 +63,8 @@ class ContactController extends Controller
                 . "Our team will reply soon.\n\n"
                 . "Best regards,\nRelocayt Team";
 
-        (new EmailSendService())->sendWithSendGrid(
-            $validated['email'],
-            "{$validated['firstName']} {$validated['lastName']}",
-            $ackSubject,
-            $ackHtml,
-            $ackPlain
-        );
+        $result = (new EmailSendService())->sendContactMessage($validated);
+
 
         return response()->json([
             'status' => true,
