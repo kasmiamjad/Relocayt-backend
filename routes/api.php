@@ -54,8 +54,12 @@ Route::get('v1/rest/amenities', [AmenityController::class, 'index']);
 Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     // Methods without AuthCheck
     
-    Route::post('/contact/send', [ContactController::class, 'send']);
-    
+    Route::prefix('v1')->group(function () {
+        Route::prefix('rest')->group(function () {
+            Route::post('/contact/send', [ContactController::class, 'send']);
+        });
+    });
+
     Route::post('/auth/register',                       [RegisterController::class, 'register'])
         ->middleware('sessions');
 
