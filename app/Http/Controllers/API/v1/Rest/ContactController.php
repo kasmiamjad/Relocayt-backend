@@ -11,6 +11,8 @@ class ContactController extends Controller
 {
     public function send(Request $request)
     {
+        $service = new EmailSendService();
+
         $validated = $request->validate([
             'firstName' => 'required|string|max:100',
             'lastName'  => 'required|string|max:100',
@@ -35,7 +37,7 @@ class ContactController extends Controller
             . "Message:\n{$validated['message']}";
 
         // ✅ 1. Send to admin
-        $adminResult = (new EmailSendService())->sendContactMessage($validated);
+        $adminResult = $service->sendContactMessage($validated);
 
 
         if (!data_get($adminResult, 'status')) {
@@ -47,24 +49,7 @@ class ContactController extends Controller
             ], 500);
         }
 
-        // ✅ 2. Send acknowledgement to user
-        $ackSubject = "Thank you for contacting Relocayt";
-        $ackHtml = "
-            <h2>Hi {$validated['firstName']},</h2>
-            <p>Thank you for reaching out to <strong>Relocayt</strong>. We have received your message and our team will get back to you soon.</p>
-            <p><strong>Your message:</strong></p>
-            <blockquote style='border-left:3px solid #38bdf8; margin:10px 0; padding-left:10px; color:#555;'>{$validated['message']}</blockquote>
-            <p>Best regards,<br>Relocayt Team</p>
-        ";
-
-        $ackPlain = "Hi {$validated['firstName']},\n\n"
-                . "Thank you for contacting Relocayt. We have received your message:\n\n"
-                . "{$validated['message']}\n\n"
-                . "Our team will reply soon.\n\n"
-                . "Best regards,\nRelocayt Team";
-
-        $result = (new EmailSendService())->sendContactMessage($validated);
-
+        $service->sendAcknowledgementMessage($validated);
 
         return response()->json([
             'status' => true,

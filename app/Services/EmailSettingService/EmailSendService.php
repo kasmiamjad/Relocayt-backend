@@ -375,6 +375,25 @@ class EmailSendService extends CoreService
         );
     }
 
+    public function sendAcknowledgementMessage(array $data): array
+    {
+        $subject = "Thank you for contacting Relocayt";
+        $html = "
+            <h2>Hi {$data['firstName']},</h2>
+            <p>Thank you for reaching out to <strong>Relocayt</strong>. We have received your message and our team will get back to you soon.</p>
+            <p><strong>Your message:</strong></p>
+            <blockquote style='border-left:3px solid #38bdf8; margin:10px 0; padding-left:10px; color:#555;'>{$data['message']}</blockquote>
+            <p>Best regards,<br>Relocayt Team</p>
+        ";
+        $plain = "Hi {$data['firstName']},\n\n"
+            . "Thank you for contacting Relocayt. We have received your message:\n\n"
+            . "{$data['message']}\n\n"
+            . "Our team will reply soon.\n\n"
+            . "Best regards,\nRelocayt Team";
+
+        return $this->sendWithSendGrid($data['email'], "{$data['firstName']} {$data['lastName']}", $subject, $html, $plain);
+    }
+
     public function sendEmailPasswordReset_old(User $user, $str): array
     {
         $emailTemplate = EmailTemplate::where('type', EmailTemplate::TYPE_VERIFY)->first();
