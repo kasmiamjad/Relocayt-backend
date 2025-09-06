@@ -308,6 +308,47 @@ class EmailSendService extends CoreService
         }
     }
 
+    protected function sendWithSendGrid(string $toEmail, string $toName, string $subject, string $htmlContent, string $plainContent = ''): array
+    {
+        try {
+            $email = new \SendGrid\Mail\Mail();
+            $email->setFrom("no-reply@relocayt.ca", "Relocayt");
+            $email->setSubject($subject);
+            $email->addTo($toEmail, $toName ?: 'User');
+            $email->addContent("text/plain", $plainContent ?: strip_tags($htmlContent));
+            $email->addContent("text/html", $this->wrapEmailLayout($htmlContent));
+
+            $sendgrid = new \SendGrid(env('SENDGRID_API_KEY'));
+            $response = $sendgrid->send($email);
+
+            if ($response->statusCode() >= 200 && $response->statusCode() < 300) {
+                return [
+                    'status' => true,
+                    'code'   => ResponseError::NO_ERROR,
+                ];
+            }
+
+            Log::error('SendGrid failed', [
+                'statusCode' => $response->statusCode(),
+                'body'       => $response->body(),
+            ]);
+
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_504,
+                'message' => 'SendGrid error: ' . $response->body(),
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('SendGrid exception', ['error' => $e->getMessage()]);
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_504,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
 
     public function sendEmailPasswordReset_old(User $user, $str): array
     {

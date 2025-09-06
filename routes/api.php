@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\API\v1\Dashboard\Admin\ServiceController;
 use App\Http\Controllers\API\v1\Rest\ShopController;
 use App\Http\Controllers\API\v1\Dashboard\Master\ServiceMasterController;
+use App\Http\Controllers\API\v1\Rest\ContactController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +53,9 @@ Route::get('v1/rest/amenities', [AmenityController::class, 'index']);
 
 Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     // Methods without AuthCheck
+    
+    Route::post('/contact/send', [ContactController::class, 'send']);
+    
     Route::post('/auth/register',                       [RegisterController::class, 'register'])
         ->middleware('sessions');
 
@@ -91,7 +95,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     Route::post('/auth/forgot/email-password/{hash}',   [LoginController::class, 'forgetPasswordVerifyEmail'])
         ->middleware('sessions');
 
-//    Route::get('/login/{provider}',                   [LoginController::class,'redirectToProvider']);
+    //    Route::get('/login/{provider}',                   [LoginController::class,'redirectToProvider']);
     Route::post('/auth/{provider}/callback',        [LoginController::class, 'handleProviderCallback']);
 
     Route::group(['prefix' => 'install'], function () {
