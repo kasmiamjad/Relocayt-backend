@@ -809,10 +809,10 @@ class EmailSendService extends CoreService
                 <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
                 <h3>Service Details</h3>
                 <p><strong>ID:</strong> {$service->id}</p>
-                <p><strong>Category:</strong> ".e($service->category?->title)."</p>
+                <p><strong>Category:</strong> ".e($service->service_type)."</p>
                 <p><strong>Status:</strong> {$service->status}</p>
                 <p><strong>Price:</strong> {$service->price}</p>
-                <p><strong>Type:</strong> {$service->type}</p>
+                <p><strong>Address:</strong> {$service->address}</p>
                 <p><strong>Radius (km):</strong> {$service->radius_km}</p>
                 </div>
 
