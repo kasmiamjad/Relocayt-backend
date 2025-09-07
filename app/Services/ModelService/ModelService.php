@@ -107,6 +107,10 @@ class ModelService extends CoreService
                 if (data_get($data, 'images')) {
                     $model->uploads($data['images']);
                 }
+                \Log::info("📧 Loaded shop user", [
+                    'user' => $model->shop?->user,
+                ]);
+
                 \Log::info("📧 Trying to send service created email", [
                     'shop_id' => $model->shop_id,
                     'user_id' => $model->shop?->user_id,
