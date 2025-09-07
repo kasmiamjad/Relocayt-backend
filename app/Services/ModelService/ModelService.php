@@ -113,9 +113,8 @@ class ModelService extends CoreService
                 ]);
 
                 \Log::info("📧 Trying to send service created email", [
-                    'shop_id' => $model->shop_id,
+                    'shop_id' => $model,
                     'user_id' => $model->shop?->user_id,
-                    'user_email' => $model->shop?->user?->email,
                 ]);
 
 
