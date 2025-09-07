@@ -108,6 +108,14 @@ class ModelService extends CoreService
                     $model->uploads($data['images']);
                 }
 
+                try {
+                    if ($model->shop && $model->shop->user) {
+                        app(\App\Services\EmailService::class)->sendServiceCreated($model->shop->user, $model);
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error("Failed to send service created email: ".$e->getMessage());
+                }
+
                 return $model;
             });
 
