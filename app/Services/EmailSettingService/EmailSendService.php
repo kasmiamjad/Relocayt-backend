@@ -728,12 +728,6 @@ class EmailSendService extends CoreService
                 ? "<h2 style='margin:0 0 12px;'>Your listing was created — pending activation</h2>"
                 : "<h2 style='margin:0 0 12px;'>Your listing is live</h2>";
 
-            $shopHtml = "
-                <p><strong>Shop:</strong> ".e($shop['title'] ?? '')."</p>
-                <p><strong>Slug:</strong> ".e($shop['slug'] ?? '')."</p>
-                <p><strong>Address:</strong> ".e($shop['address'] ?? '')."</p>
-            ";
-
             $propertyHtml = "
                 <p><strong>Property:</strong> ".e($property['title'] ?? '')."</p>
                 <p><strong>Slug:</strong> ".e($property['slug'] ?? '')."</p>
@@ -744,18 +738,6 @@ class EmailSendService extends CoreService
                 <p><strong>Check-in/out:</strong> ".e((string)($property['check_in_time'] ?? '')).' / '.e((string)($property['check_out_time'] ?? ''))."</p>
             ";
 
-            $serviceHtml = "
-                <p><strong>Service ID:</strong> ".e((string)($service['id'] ?? ''))."</p>
-                <p><strong>Status/Type:</strong> ".e((string)($service['status'] ?? ''))." / ".e((string)($service['type'] ?? ''))."</p>
-                <p><strong>Base price:</strong> ".e((string)($service['price'] ?? ''))."</p>
-            ";
-
-            $smHtml = "
-                <p><strong>Service Master ID:</strong> ".e((string)($sm['id'] ?? ''))."</p>
-                <p><strong>Price / Interval / Pause:</strong> "
-                .e((string)($sm['price'] ?? ''))." / ".e((string)($sm['interval'] ?? ''))." / ".e((string)($sm['pause'] ?? ''))."</p>
-                <p><strong>Type:</strong> ".e((string)($sm['type'] ?? ''))."</p>
-            ";
 
             $nextHtml = $isPending
                 ? "
@@ -776,23 +758,8 @@ class EmailSendService extends CoreService
                 <p>Your listing was created with the following details:</p>
 
                 <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
-                    <h3>Shop</h3>
-                    {$shopHtml}
-                </div>
-
-                <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
                     <h3>Property</h3>
                     {$propertyHtml}
-                </div>
-
-                <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
-                    <h3>Service</h3>
-                    {$serviceHtml}
-                </div>
-
-                <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
-                    <h3>Service Master</h3>
-                    {$smHtml}
                 </div>
 
                 {$nextHtml}
@@ -809,7 +776,7 @@ class EmailSendService extends CoreService
                 $user->email,
                 $userName,
                 $subject,
-                $this->wrapEmailLayout($html),
+                $html,
                 strip_tags($html)
             );
 
