@@ -796,7 +796,7 @@ class EmailSendService extends CoreService
         }
     }
 
-    public function sendServiceCreated(User $user, Service $service): array
+    public function sendServiceCreated(User $user, \App\Models\Service $service): array
     {
         try {
             $subject = "Your PLS was created — pending activation";
@@ -833,7 +833,7 @@ class EmailSendService extends CoreService
                 $html,
                 strip_tags($html)
             );
-            
+
         } catch (\Throwable $e) {
             \Log::error('Service created email error', ['message' => $e->getMessage()]);
             return [
