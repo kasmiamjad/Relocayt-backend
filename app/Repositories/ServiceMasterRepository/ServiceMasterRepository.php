@@ -23,6 +23,10 @@ class ServiceMasterRepository extends CoreRepository
             $query->where('shop_id', $filter['shop_id']); // ✅ fixed
         }
 
+        if (!empty($filter['type'])) {
+            $query->where('type', $filter['type']); // ✅ filter by type
+        }
+
         $column = $filter['column'] ?? 'id';
 
         if ($column !== 'id') {
