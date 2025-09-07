@@ -714,15 +714,7 @@ class EmailSendService extends CoreService
 
     public function sendListingCreated(User $user, array $data): array
     {
-        // Pick your configured row; `first()` is safer unless you use a specific ID.
-        $emailSetting = EmailSetting::find(3);
-        $mail = $this->emailBaseAuth($emailSetting, $user);
-
         try {
-            // Optional debug while testing:
-            // $mail->SMTPDebug = 2;
-            // $mail->Debugoutput = function($str, $level) { \Log::debug("SMTP[$level] $str"); };
-
             $shop     = $data['shop'] ?? [];
             $property = $data['property'] ?? [];
             $service  = $data['service'] ?? [];
@@ -730,46 +722,45 @@ class EmailSendService extends CoreService
 
             $userName = e($user->name_or_email ?? trim(($user->firstname ?? '').' '.($user->lastname ?? '')) ?: 'Host');
 
-            // If property is inactive by default, reflect that tone
-            $isPending = strtolower((string)($property['status'] ?? 'inactive')) !== 'active';
-
+            $isPending = true;
+        
             $header = $isPending
                 ? "<h2 style='margin:0 0 12px;'>Your listing was created — pending activation</h2>"
                 : "<h2 style='margin:0 0 12px;'>Your listing is live</h2>";
 
             $shopHtml = "
-                <p style='margin:6px 0;'><strong>Shop:</strong> ".e($shop['title'] ?? '')."</p>
-                <p style='margin:6px 0;'><strong>Slug:</strong> ".e($shop['slug'] ?? '')."</p>
-                <p style='margin:6px 0;'><strong>Address:</strong> ".e($shop['address'] ?? '')."</p>
+                <p><strong>Shop:</strong> ".e($shop['title'] ?? '')."</p>
+                <p><strong>Slug:</strong> ".e($shop['slug'] ?? '')."</p>
+                <p><strong>Address:</strong> ".e($shop['address'] ?? '')."</p>
             ";
 
             $propertyHtml = "
-                <p style='margin:6px 0;'><strong>Property:</strong> ".e($property['title'] ?? '')."</p>
-                <p style='margin:6px 0;'><strong>Slug:</strong> ".e($property['slug'] ?? '')."</p>
-                <p style='margin:6px 0;'><strong>Status:</strong> ".e($property['status'] ?? '')."</p>
-                <p style='margin:6px 0;'><strong>Location:</strong> ".e(($property['city'] ?? '').', '.($property['country'] ?? ''))."</p>
-                <p style='margin:6px 0;'><strong>Price per night:</strong> ".e(($property['currency'] ?? '')).' '.e((string)($property['price_per_night'] ?? ''))."</p>
-                <p style='margin:6px 0;'><strong>Min/Max nights:</strong> ".e((string)($property['min_nights'] ?? '')).' / '.e((string)($property['max_nights'] ?? ''))."</p>
-                <p style='margin:6px 0;'><strong>Check-in/out:</strong> ".e((string)($property['check_in_time'] ?? '')).' / '.e((string)($property['check_out_time'] ?? ''))."</p>
+                <p><strong>Property:</strong> ".e($property['title'] ?? '')."</p>
+                <p><strong>Slug:</strong> ".e($property['slug'] ?? '')."</p>
+                <p><strong>Status:</strong> ".e($property['status'] ?? '')."</p>
+                <p><strong>Location:</strong> ".e(($property['city'] ?? '').', '.($property['country'] ?? ''))."</p>
+                <p><strong>Price per night:</strong> ".e(($property['currency'] ?? '')).' '.e((string)($property['price_per_night'] ?? ''))."</p>
+                <p><strong>Min/Max nights:</strong> ".e((string)($property['min_nights'] ?? '')).' / '.e((string)($property['max_nights'] ?? ''))."</p>
+                <p><strong>Check-in/out:</strong> ".e((string)($property['check_in_time'] ?? '')).' / '.e((string)($property['check_out_time'] ?? ''))."</p>
             ";
 
             $serviceHtml = "
-                <p style='margin:6px 0;'><strong>Service ID:</strong> ".e((string)($service['id'] ?? ''))."</p>
-                <p style='margin:6px 0;'><strong>Status/Type:</strong> ".e((string)($service['status'] ?? ''))." / ".e((string)($service['type'] ?? ''))."</p>
-                <p style='margin:6px 0;'><strong>Base price:</strong> ".e((string)($service['price'] ?? ''))."</p>
+                <p><strong>Service ID:</strong> ".e((string)($service['id'] ?? ''))."</p>
+                <p><strong>Status/Type:</strong> ".e((string)($service['status'] ?? ''))." / ".e((string)($service['type'] ?? ''))."</p>
+                <p><strong>Base price:</strong> ".e((string)($service['price'] ?? ''))."</p>
             ";
 
             $smHtml = "
-                <p style='margin:6px 0;'><strong>Service Master ID:</strong> ".e((string)($sm['id'] ?? ''))."</p>
-                <p style='margin:6px 0;'><strong>Price / Interval / Pause:</strong> "
+                <p><strong>Service Master ID:</strong> ".e((string)($sm['id'] ?? ''))."</p>
+                <p><strong>Price / Interval / Pause:</strong> "
                 .e((string)($sm['price'] ?? ''))." / ".e((string)($sm['interval'] ?? ''))." / ".e((string)($sm['pause'] ?? ''))."</p>
-                <p style='margin:6px 0;'><strong>Type:</strong> ".e((string)($sm['type'] ?? ''))."</p>
+                <p><strong>Type:</strong> ".e((string)($sm['type'] ?? ''))."</p>
             ";
 
             $nextHtml = $isPending
                 ? "
                     <div style='margin:18px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px;'>
-                    <p style='margin:0 0 8px;'><strong>What happens next?</strong></p>
+                    <p><strong>What happens next?</strong></p>
                     <ul style='margin:0 0 0 18px;'>
                         <li>Our team reviews your listing for quality and policy compliance.</li>
                         <li>We’ll email you once your listing is activated.</li>
@@ -781,27 +772,27 @@ class EmailSendService extends CoreService
 
             $html = "
                 {$header}
-                <p style='margin:0 0 18px;'>Dear {$userName},</p>
-                <p style='margin:0 18px 18px 0;'>Your listing was created with the following details:</p>
+                <p>Dear {$userName},</p>
+                <p>Your listing was created with the following details:</p>
 
                 <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
-                <h3 style='margin:0 0 8px;'>Shop</h3>
-                {$shopHtml}
+                    <h3>Shop</h3>
+                    {$shopHtml}
                 </div>
 
                 <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
-                <h3 style='margin:0 0 8px;'>Property</h3>
-                {$propertyHtml}
+                    <h3>Property</h3>
+                    {$propertyHtml}
                 </div>
 
                 <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
-                <h3 style='margin:0 0 8px;'>Service</h3>
-                {$serviceHtml}
+                    <h3>Service</h3>
+                    {$serviceHtml}
                 </div>
 
                 <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
-                <h3 style='margin:0 0 8px;'>Service Master</h3>
-                {$smHtml}
+                    <h3>Service Master</h3>
+                    {$smHtml}
                 </div>
 
                 {$nextHtml}
@@ -813,20 +804,32 @@ class EmailSendService extends CoreService
                 ? 'Your listing was created — pending activation'
                 : 'Your listing is live';
 
-            $mail->Subject = $subject;
-            $mail->Body    = $this->wrapEmailLayout($html);
-            $mail->AltBody = strip_tags($html);
-            $mail->isHTML(true);
+            // wrap layout if you have one
+            $htmlBody = $this->wrapEmailLayout($html);
 
-            // Optional: notify internal team
-            // $mail->addBCC('hosts@relocayt.ca', 'Host Ops');
+            /** @var Sendgrid_lib $sg */
+            $sg = new \App\Libraries\Sendgrid_lib();
 
-            $ok = $mail->send();
-            Log::error('Accomodation email success', ['message' => $ok]);
+            $response = $sg->sendMail([
+                'to'          => $user->email,
+                'to_name'     => $userName,
+                'subject'     => $subject,
+                'html'        => $htmlBody,
+                'plain'       => strip_tags($html),
+                'from'        => 'no-reply@relocayt.ca',
+                'from_name'   => 'Relocayt',
+                'custom_args' => [
+                    'type'         => 'listing_created',
+                    'user_id'      => $user->id,
+                    'property_id'  => $property['id'] ?? null,
+                    'service_id'   => $service['id'] ?? null,
+                ],
+            ]);
+
             return [
-                'status'  => (bool)$ok,
-                'code'    => $ok ? ResponseError::NO_ERROR : ResponseError::ERROR_504,
-                'message' => $ok ? 'sent' : $mail->ErrorInfo,
+                'status'  => $response['status'] ?? false,
+                'code'    => ($response['status'] ?? false) ? ResponseError::NO_ERROR : ResponseError::ERROR_504,
+                'message' => $response['message'] ?? 'unknown',
             ];
         } catch (\Throwable $e) {
             \Log::error('Listing created email error', ['message' => $e->getMessage()]);
@@ -837,5 +840,6 @@ class EmailSendService extends CoreService
             ];
         }
     }
+
 
 }
