@@ -804,27 +804,15 @@ class EmailSendService extends CoreService
                 ? 'Your listing was created — pending activation'
                 : 'Your listing is live';
 
-            // wrap layout if you have one
-            $htmlBody = $this->wrapEmailLayout($html);
-
             /** @var Sendgrid_lib $sg */
-            $sg = new \App\Libraries\Sendgrid_lib();
+            return $this->sendWithSendGrid(
+                $user->email,
+                $userName,
+                $subject,
+                $this->wrapEmailLayout($html),
+                strip_tags($html)
+            );
 
-            $response = $sg->sendMail([
-                'to'          => $user->email,
-                'to_name'     => $userName,
-                'subject'     => $subject,
-                'html'        => $htmlBody,
-                'plain'       => strip_tags($html),
-                'from'        => 'no-reply@relocayt.ca',
-                'from_name'   => 'Relocayt',
-                'custom_args' => [
-                    'type'         => 'listing_created',
-                    'user_id'      => $user->id,
-                    'property_id'  => $property['id'] ?? null,
-                    'service_id'   => $service['id'] ?? null,
-                ],
-            ]);
 
             return [
                 'status'  => $response['status'] ?? false,
