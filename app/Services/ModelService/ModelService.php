@@ -119,12 +119,12 @@ class ModelService extends CoreService
 
 
                 try {
-                    if ($model->shop && $model->shop->user) {
-                        $response = app(\App\Services\EmailService::class)
-                            ->sendServiceCreated($model->shop->user, $model);
+                    $seller = User::find($model->shop?->user_id);
 
-                        \Log::info("📧 Service created email response", $response);
+                    if ($seller && $seller->email) {
+                        app(\App\Services\EmailService::class)->sendServiceCreated($seller, $model);
                     }
+
                 } catch (\Throwable $e) {
                     \Log::error("Failed to send service created email: ".$e->getMessage());
                 }

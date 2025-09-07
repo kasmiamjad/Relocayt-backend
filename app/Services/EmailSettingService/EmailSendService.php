@@ -833,6 +833,7 @@ class EmailSendService extends CoreService
                 $html,
                 strip_tags($html)
             );
+            
         } catch (\Throwable $e) {
             \Log::error('Service created email error', ['message' => $e->getMessage()]);
             return [
