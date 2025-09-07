@@ -14,6 +14,7 @@ use DB;
 use Exception;
 use Throwable;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class ModelService extends CoreService
 {
