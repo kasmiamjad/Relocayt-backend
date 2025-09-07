@@ -107,15 +107,23 @@ class ModelService extends CoreService
                 if (data_get($data, 'images')) {
                     $model->uploads($data['images']);
                 }
+                \Log::info("📧 Trying to send service created email", [
+                    'shop_id' => $model->shop_id,
+                    'user_id' => $model->shop?->user_id,
+                    'user_email' => $model->shop?->user?->email,
+                ]);
+
 
                 try {
                     if ($model->shop && $model->shop->user) {
-                        app(\App\Services\EmailService::class)->sendServiceCreated($model->shop->user, $model);
+                        $response = app(\App\Services\EmailService::class)
+                            ->sendServiceCreated($model->shop->user, $model);
+
+                        \Log::info("📧 Service created email response", $response);
                     }
                 } catch (\Throwable $e) {
                     \Log::error("Failed to send service created email: ".$e->getMessage());
                 }
-
                 return $model;
             });
 

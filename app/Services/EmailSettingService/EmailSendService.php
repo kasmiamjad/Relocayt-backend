@@ -799,7 +799,7 @@ class EmailSendService extends CoreService
     public function sendServiceCreated(User $user, Service $service): array
     {
         try {
-            $subject = "Your service was created — pending activation";
+            $subject = "Your PLS was created — pending activation";
 
             $html = "
                 <h2 style='margin:0 0 12px;'>Your service was created — pending activation</h2>
@@ -830,7 +830,7 @@ class EmailSendService extends CoreService
                 $user->email,
                 $user->name ?? 'Host',
                 $subject,
-                $this->wrapEmailLayout($html),
+                $html,
                 strip_tags($html)
             );
         } catch (\Throwable $e) {
