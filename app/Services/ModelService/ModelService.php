@@ -121,9 +121,8 @@ class ModelService extends CoreService
 
                 try {
                     $seller = User::find($model->shop?->user_id);
-
                     if ($seller && $seller->email) {
-                        app(\App\Services\EmailService::class)->sendServiceCreated($seller, $model);
+                        app(\App\Services\EmailSettingService\EmailSendService::class)->sendServiceCreated($seller, $model);
                     }
 
                 } catch (\Throwable $e) {
