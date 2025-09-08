@@ -247,7 +247,7 @@ class ModelService extends CoreService
             
 
             // ✅ Reload with shop & user chain
-            $service = Service::with('shops.users')->find($service->id);
+            $service = Service::with('shop.user')->find($service->id);
             \Log::info('Raw update result:', ['updated' => $service]);
 
             if ($service && $service->shop && $service->shop->user) {
@@ -256,21 +256,9 @@ class ModelService extends CoreService
                 try {
                     $mailer = app(\App\Services\EmailSettingService\EmailSendService::class);
 
-                    $subject = "Your service status has been updated";
-                    $htmlContent = view('emails.service_status_updated', [
-                        'user'    => $user,
-                        'service' => $service,
-                        'status'  => data_get($data, 'status'),
-                    ])->render();
+                    $resp = $mailer->sendServiceStatusUpdated($user, $service, data_get($data, 'status'));
 
-                    $resp = $mailer->sendWithSendGrid(
-                        $user->email,
-                        $user->name ?? 'User',
-                        $subject,
-                        $htmlContent
-                    );
-
-                    \Log::info("📧 Service update email sent", $resp);
+                    \Log::info("📧 Service update email response: ", $resp);
                 } catch (\Exception $e) {
                     \Log::error("❌ Failed to send service update email", [
                         'error' => $e->getMessage(),

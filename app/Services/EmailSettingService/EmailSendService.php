@@ -844,4 +844,58 @@ class EmailSendService extends CoreService
         }
     }
 
+    public function sendServiceStatusUpdated(User $user, \App\Models\Service $service, string $status): array
+    {
+        try {
+            $subject = "Your service status has been updated";
+
+            $html = "
+                <h2 style='margin:0 0 12px;'>Your service status has been updated</h2>
+                <p>Dear " . e($user->name ?? 'Host') . ",</p>
+                <p>Your service <strong>" . e($service->title) . "</strong> has a new status update:</p>
+
+                <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
+                    <h3>Service Details</h3>
+                    <p><strong>ID:</strong> {$service->id}</p>
+                    <p><strong>Category:</strong> " . e($service->service_type) . "</p>
+                    <p><strong>Status:</strong> {$status}</p>
+                    <p><strong>Price:</strong> {$service->price}</p>
+                    <p><strong>Address:</strong> {$service->address}</p>
+                    <p><strong>Radius (km):</strong> {$service->radius_km}</p>
+                </div>
+
+                <div style='margin:18px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px;'>
+                    <p><strong>What does this mean?</strong></p>
+                    <ul style='margin:0 0 0 18px;'>
+                        <li>If status is <em>pending</em>, our team is reviewing your service.</li>
+                        <li>If status is <em>active</em>, your service is now visible to customers.</li>
+                        <li>If status is <em>inactive</em>, you can update details anytime from your dashboard.</li>
+                    </ul>
+                </div>
+            ";
+
+            return $this->sendWithSendGrid(
+                $user->email,
+                $user->name ?? 'Host',
+                $subject,
+                $html,
+                strip_tags($html)
+            );
+
+        } catch (\Throwable $e) {
+            \Log::error('Service status update email error', [
+                'message'    => $e->getMessage(),
+                'service_id' => $service->id ?? null,
+            ]);
+
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_504,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+
+
 }
