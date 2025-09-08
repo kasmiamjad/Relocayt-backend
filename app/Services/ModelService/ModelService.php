@@ -236,32 +236,62 @@ class ModelService extends CoreService
     public function update(Service $service, array $data): array
     {
         try {
-            //Log::info('Hardcoded Service ID:', ['id' => $service->id]);
-
             // ✅ Direct SQL-level update
-          $updated = DB::table('services')
-            ->where('id', $service->id)
-            ->update([
-                'status' => data_get($data, 'status'), // ✅ dynamically use the incoming value
-                'updated_at' => now()
-            ]);
+            $updated = DB::table('services')
+                ->where('id', $service->id)
+                ->update([
+                    'status'     => data_get($data, 'status'),
+                    'updated_at' => now()
+                ]);
 
+            
 
-            \Log::info('Raw update result:', ['updated' => $updated]);
+            // ✅ Reload with shop & user chain
+            $service = Service::with('shops.users')->find($service->id);
+            \Log::info('Raw update result:', ['updated' => $service]);
 
-            // Optionally reload the model if needed
+            if ($service && $service->shop && $service->shop->user) {
+                $user = $service->shop->user;
+
+                try {
+                    $mailer = app(\App\Services\EmailSettingService\EmailSendService::class);
+
+                    $subject = "Your service status has been updated";
+                    $htmlContent = view('emails.service_status_updated', [
+                        'user'    => $user,
+                        'service' => $service,
+                        'status'  => data_get($data, 'status'),
+                    ])->render();
+
+                    $resp = $mailer->sendWithSendGrid(
+                        $user->email,
+                        $user->name ?? 'User',
+                        $subject,
+                        $htmlContent
+                    );
+
+                    \Log::info("📧 Service update email sent", $resp);
+                } catch (\Exception $e) {
+                    \Log::error("❌ Failed to send service update email", [
+                        'error' => $e->getMessage(),
+                        'service_id' => $service->id,
+                    ]);
+                }
+            }
+
             return [
                 'status' => true,
-                'data' => Service::find($service->id), // or $service if already refreshed
+                'data'   => $service,
             ];
 
         } catch (Throwable $e) {
             return [
-                'status' => false,
+                'status'  => false,
                 'message' => $e->getMessage(),
             ];
         }
     }
+
 
 
     public function update_old(Service $service, array $data): array
