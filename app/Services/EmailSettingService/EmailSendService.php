@@ -23,6 +23,7 @@ use Throwable;
 use View;
 use SendGrid;
 use SendGrid\Mail\Mail;
+use Illuminate\Support\Str;
 
 class EmailSendService extends CoreService
 {
@@ -847,7 +848,25 @@ class EmailSendService extends CoreService
     public function sendServiceStatusUpdated(User $user, \App\Models\Service $service, string $status): array
     {
         try {
-            $subject = "Your service status has been updated";
+            $subject = "Your Listings status has been updated";
+
+            // Map raw status → caption
+            $statusMap = [
+                'new'      => 'Pending',
+                'accepted' => 'Approved',
+                'cancel'   => 'Cancelled',
+            ];
+            $captionStatus = $statusMap[$status] ?? ucfirst($status);
+            $cancelNote = '';
+            if ($status === 'cancel' && !empty($service->status_note)) {
+                $cancelNote = "
+                    <div style='margin:18px 0; padding:14px 16px; background:#fff5f5; border:1px solid #fca5a5; border-radius:8px;'>
+                        <p style='color:#b91c1c; font-weight:bold;'>❗ Cancellation Note:</p>
+                        <p style='margin:6px 0 0; color:#7f1d1d;'>" . e($service->status_note) . "</p>
+                    </div>
+                ";
+            }
+            $category = Str::title(str_replace('_', ' ', $service->service_type));
 
             $html = "
                 <h2 style='margin:0 0 12px;'>Your service status has been updated</h2>
@@ -857,19 +876,22 @@ class EmailSendService extends CoreService
                 <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
                     <h3>Service Details</h3>
                     <p><strong>ID:</strong> {$service->id}</p>
-                    <p><strong>Category:</strong> " . e($service->service_type) . "</p>
-                    <p><strong>Status:</strong> {$status}</p>
+                    <p><strong>Category:</strong> " . e(Str::title(str_replace('_', ' ', $service->service_type))) . "</p>
+                    <p><strong>Status:</strong> {$captionStatus}</p>
                     <p><strong>Price:</strong> {$service->price}</p>
                     <p><strong>Address:</strong> {$service->address}</p>
                     <p><strong>Radius (km):</strong> {$service->radius_km}</p>
                 </div>
 
+                {$cancelNote}
+
                 <div style='margin:18px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px;'>
                     <p><strong>What does this mean?</strong></p>
                     <ul style='margin:0 0 0 18px;'>
-                        <li>If status is <em>pending</em>, our team is reviewing your service.</li>
-                        <li>If status is <em>active</em>, your service is now visible to customers.</li>
-                        <li>If status is <em>inactive</em>, you can update details anytime from your dashboard.</li>
+                        <li>If status is <em>Pending</em>, our team is reviewing your service.</li>
+                        <li>If status is <em>Approved</em>, your service is now visible to customers.</li>
+                        <li>If status is <em>Inactive</em>, you can update details anytime from your dashboard.</li>
+                        <li>If status is <em>Cancelled</em>, please check the note above for more details.</li>
                     </ul>
                 </div>
             ";
