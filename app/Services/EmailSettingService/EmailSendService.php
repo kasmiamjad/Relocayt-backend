@@ -851,7 +851,7 @@ class EmailSendService extends CoreService
 
             $html = "
                 <h2 style='margin:0 0 12px;'>Your service status has been updated</h2>
-                <p>Dear " . e($user->name ?? 'Host') . ",</p>
+                <p>Dear " . e($user->firstname ?? 'Host') . ",</p>
                 <p>Your service <strong>" . e($service->title) . "</strong> has a new status update:</p>
 
                 <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
@@ -876,7 +876,7 @@ class EmailSendService extends CoreService
 
             return $this->sendWithSendGrid(
                 $user->email,
-                $user->name ?? 'Host',
+                $user->firstname ?? 'Host',
                 $subject,
                 $html,
                 strip_tags($html)
@@ -895,7 +895,4 @@ class EmailSendService extends CoreService
             ];
         }
     }
-
-
-
 }

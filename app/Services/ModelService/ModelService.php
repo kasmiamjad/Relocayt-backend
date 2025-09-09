@@ -251,7 +251,7 @@ class ModelService extends CoreService
             \Log::info('Raw update result:', ['updated' => $service]);
 
             if ($service && $service->shop && $service->shop->user) {
-                $user = $service->shop->user;
+                $user = $service->shop->seller;
 
                 try {
                     $mailer = app(\App\Services\EmailSettingService\EmailSendService::class);
