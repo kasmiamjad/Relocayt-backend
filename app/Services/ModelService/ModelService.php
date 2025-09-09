@@ -247,7 +247,7 @@ class ModelService extends CoreService
             
 
             // ✅ Reload with shop & user chain
-            $service = Service::with('shop.user')->find($service->id);
+            $service = Service::with('shop.seller')->find($service->id);
             \Log::info('Raw update result:', ['updated' => $service]);
 
             if ($service && $service->shop && $service->shop->user) {
