@@ -255,7 +255,7 @@ class ModelService extends CoreService
 
                 try {
                     $mailer = app(\App\Services\EmailSettingService\EmailSendService::class);
-                    $resp = $mailer->sendServiceStatusUpdated($user, $service, data_get($data, 'status'));
+                    $resp = $mailer->sendServiceStatusUpdated($user, $service, data_get($data, 'status'), data_get($data, 'status_note'));
                     //Log::info('📧 Service update email response', ['resp' => $resp, 'service_id' => $service->id]);
                 } catch (\Exception $e) {
                     Log::error('❌ Failed to send service update email', [

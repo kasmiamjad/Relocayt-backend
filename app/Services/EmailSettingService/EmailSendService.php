@@ -845,24 +845,27 @@ class EmailSendService extends CoreService
         }
     }
 
-    public function sendServiceStatusUpdated(User $user, \App\Models\Service $service, string $status): array
+    public function sendServiceStatusUpdated(User $user, \App\Models\Service $service, string $status, $statusNote = null): array
     {
         try {
             $subject = "Your Listings status has been updated";
 
             // Map raw status → caption
             $statusMap = [
-                'new'      => 'Pending',
-                'accepted' => 'Approved',
-                'cancel'   => 'Cancelled',
+                'new'       => 'Pending',
+                'accepted'  => 'Approved',
+                'inactive'  => 'Inactive',
+                'cancel'    => 'Cancelled',
+                'canceled'  => 'Cancelled',
             ];
+
             $captionStatus = $statusMap[$status] ?? ucfirst($status);
             $cancelNote = '';
-            if ($status === 'cancel' && !empty($service->status_note)) {
+            if ($status === 'canceled' && !empty($statusNote)) {
                 $cancelNote = "
                     <div style='margin:18px 0; padding:14px 16px; background:#fff5f5; border:1px solid #fca5a5; border-radius:8px;'>
                         <p style='color:#b91c1c; font-weight:bold;'>❗ Cancellation Note:</p>
-                        <p style='margin:6px 0 0; color:#7f1d1d;'>" . e($service->status_note) . "</p>
+                        <p style='margin:6px 0 0; color:#7f1d1d;'>" . e($statusNote) . "</p>
                     </div>
                 ";
             }
