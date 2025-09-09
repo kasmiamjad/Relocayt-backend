@@ -319,7 +319,7 @@ class UserController extends AdminBaseController
     {
         $request->validate([
             'verification_status' => 'required|in:pending,approved,rejected',
-            'verification_note' => 'nullable|string|max:1000',
+            'verification_note'   => 'nullable|string|max:1000',
         ]);
 
         $user = User::where('uuid', $uuid)->first();
@@ -330,10 +330,28 @@ class UserController extends AdminBaseController
 
         $user->update([
             'verification_status' => $request->verification_status,
-            'verification_note' => $request->verification_note,
+            'verification_note'   => $request->verification_note,
         ]);
+
+        // ✅ Send verification status email
+        try {
+            $mailer = app(\App\Services\EmailSettingService\EmailSendService::class);
+
+            $mailer->sendVerificationStatusUpdated(
+                $user,
+                $request->verification_status,
+                $request->verification_note
+            );
+        } catch (\Exception $e) {
+            \Log::error('❌ Failed to send verification status email', [
+                'error'    => $e->getMessage(),
+                'user_id'  => $user->id,
+                'uuid'     => $uuid,
+            ]);
+        }
 
         return response()->json(['message' => 'Verification status updated successfully']);
     }
+
 
 }

@@ -920,4 +920,51 @@ class EmailSendService extends CoreService
             ];
         }
     }
+
+    public function sendVerificationStatusUpdated($user, $status, $note = null)
+    {
+        $statusMap = [
+            'pending'  => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+        ];
+
+        $captionStatus = $statusMap[$status] ?? ucfirst($status);
+
+        $rejectNote = '';
+        if ($status === 'rejected' && !empty($note)) {
+            $rejectNote = "
+                <div style='margin:18px 0; padding:14px 16px; background:#fff5f5; border:1px solid #fca5a5; border-radius:8px;'>
+                    <p style='color:#b91c1c; font-weight:bold;'>❗ Rejection Reason:</p>
+                    <p style='margin:6px 0 0; color:#7f1d1d;'>" . e($note) . "</p>
+                </div>
+            ";
+        }
+
+        $subject = "Your Verification Status has been updated";
+
+        $html = "
+            <h2 style='margin:0 0 12px;'>Your verification status has been updated</h2>
+            <p>Dear " . e($user->firstname ?? 'User') . ",</p>
+            <p>Your verification request has a new status update:</p>
+
+            <div style='margin:18px 0; padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px;'>
+                <p><strong>Status:</strong> {$captionStatus}</p>
+            </div>
+
+            {$rejectNote}
+
+            <div style='margin:18px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px;'>
+                <p><strong>What does this mean?</strong></p>
+                <ul style='margin:0 0 0 18px;'>
+                    <li><em>Pending</em>: Our team is still reviewing your documents.</li>
+                    <li><em>Approved</em>: Your verification is complete and your account is fully active.</li>
+                    <li><em>Rejected</em>: Please see the note above and resubmit required documents.</li>
+                </ul>
+            </div>
+        ";
+
+        return $this->send($user->email, $subject, $html);
+    }
+
 }
