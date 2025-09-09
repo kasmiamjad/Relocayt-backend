@@ -964,7 +964,13 @@ class EmailSendService extends CoreService
             </div>
         ";
 
-        return $this->send($user->email, $subject, $html);
+        //return $this->send($user->email, $subject, $html);
+        return $this->sendWithSendGrid(
+                $user->email,
+                $subject,
+                $html,
+                strip_tags($html)
+            );
     }
 
 }
