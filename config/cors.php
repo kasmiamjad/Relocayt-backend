@@ -23,6 +23,7 @@ return [
         'https://relocayt.ca',
         'https://relocayt.com',
         'https://admin.relocayt.ca',
+        'https://admin.relocayt.com/',
         'http://localhost:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3000',
