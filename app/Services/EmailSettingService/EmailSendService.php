@@ -233,11 +233,11 @@ class EmailSendService extends CoreService
                     </tr>
 
                     <!-- Footer -->
-                    <tr>
+                    <!-- <tr>
                         <td align="center" style="padding: 20px 40px; font-size:12px; color:#999999;">
                         If you didn’t sign up for Relocayt, you can safely ignore this email.
                         </td>
-                    </tr>
+                    </tr> -->
 
                     </table>
                 </td>
@@ -1021,7 +1021,7 @@ class EmailSendService extends CoreService
                 <p style='margin:0;'><strong>Booking Details:</strong></p>
                 <ul style='margin:8px 0 0 18px;'>
                     <li>User: {$booking->user->name_or_email} ({$booking->user->email})</li>
-                    <li>Status: {$booking->status}</li>
+                    <li><strong>Status:</strong> " . ucwords(str_replace('_', ' ', $booking->status)) . "</li>
                     <li>User Note: {$booking->canceled_note}</li>
                 </ul>
             </div>
