@@ -276,7 +276,7 @@ class EmailSendService extends CoreService
 
             // ✅ Create SendGrid Mail object
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("np-reply@relocayt.ca", "Relocayt");
+            $email->setFrom("np-reply@relocayt.com", "Relocayt");
             $email->setSubject("{$resetCode} - Reset Your Password");
             $email->addTo($user->email, $user->firstname ?? 'User');
             $email->addContent("text/plain", $altWithCode);
@@ -314,7 +314,7 @@ class EmailSendService extends CoreService
     {
         try {
             $email = new \SendGrid\Mail\Mail();
-            $email->setFrom("no-reply@relocayt.ca", "Relocayt");
+            $email->setFrom("no-reply@relocayt.com", "Relocayt");
             $email->setSubject($subject);
             $email->addTo($toEmail, $toName ?: 'User');
             $email->addContent("text/plain", $plainContent ?: strip_tags($htmlContent));
@@ -441,109 +441,6 @@ class EmailSendService extends CoreService
             ];
         }
     }
-
-    public function sendBookingInterestEmail(array $data): array
-    {
-        // ✅ Domain restriction
-        $allowedOrigins = [
-            'https://relocayt.ca',
-            'https://admin.relocayt.ca',
-            'http://localhost:3000',
-            'http://127.0.0.1:3000',
-        ];
-
-        $origin = request()->header('Origin') ?? request()->header('Referer') ?? '';
-
-        if (!in_array($origin, $allowedOrigins)) {
-            \Log::warning("Blocked booking email from untrusted origin: $origin");
-            return [
-                'status' => false,
-                'message' => 'Unauthorized domain',
-                'code' => ResponseError::ERROR_403,
-            ];
-        }
-
-        // ✅ Rate limit by IP
-        $ip = request()->ip();
-        $key = "email_limit:$ip";
-
-        $count = cache()->increment($key);
-        cache()->put($key, $count, now()->addMinutes(60)); // 1-hour expiration
-
-        if ($count > 5) {
-            \Log::warning("Too many booking emails from IP: $ip");
-            return [
-                'status' => false,
-                'message' => 'Too many requests. Try again later.',
-                'code' => ResponseError::ERROR_429,
-            ];
-        }
-        try {
-            $emailSetting = EmailSetting::find(3);
-
-            if (!$emailSetting) {
-                \Log::error('EmailSetting with ID 3 not found.');
-                return [
-                    'status' => false,
-                    'message' => 'Email settings not found.',
-                    'code' => ResponseError::ERROR_404,
-                ];
-            }
-
-            \Log::info('Loaded EmailSetting ID 3:', $emailSetting->toArray());
-            $mail = new PHPMailer(true);
-
-            $mail->CharSet = 'UTF-8';
-            $mail->isSMTP();
-            $mail->SMTPAuth   = $emailSetting->smtp_auth;
-            $mail->Host       = $emailSetting->host;
-            $mail->Port       = $emailSetting->port;
-            $mail->Username   = $emailSetting->from_to;
-            $mail->Password   = $emailSetting->password;
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->SMTPOptions = $emailSetting->ssl ?: [
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true,
-                ],
-            ];
-
-            $mail->setFrom("no-reply@relocayt.ca", $emailSetting->from_site);
-            $mail->addAddress('kasmi.amjad@gmail.com', 'Booking Admin');
-
-            $mail->Subject = 'New Booking Interest';
-
-            $html = "
-                <h2>New Booking Interest Submitted</h2>
-                <p><strong>Service ID:</strong> {$data['serviceMasterId']}</p>
-                <p><strong>Shop Slug:</strong> {$data['shopSlug']}</p>
-                <p><strong>Total Price:</strong> $ {$data['totalPrice']}</p>
-                <p><strong>Night Count:</strong> {$data['nightCount']}</p>
-                <p><strong>Date From:</strong> {$data['dateRange']['from']}</p>
-                <p><strong>Date To:</strong> {$data['dateRange']['to']}</p>
-            ";
-
-            $mail->Body = $this->wrapEmailLayout($html);
-            $mail->AltBody = strip_tags($html);
-            $mail->isHTML(true);
-            $mail->send();
-
-            return [
-                'status' => true,
-                'code' => ResponseError::NO_ERROR,
-            ];
-        } catch (Exception $e) {
-            \Log::error('Booking Email Error', ['message' => $e->getMessage()]);
-            return [
-                'status' => false,
-                'message' => $e->getMessage(),
-                'code' => ResponseError::ERROR_504,
-            ];
-        }
-    }
-
-
     public function emailBaseAuth(?EmailSetting $emailSetting, User $user): PHPMailer
     {
 
@@ -588,7 +485,7 @@ class EmailSendService extends CoreService
 
         try {
 
-            $mail->setFrom("no-reply@relocayt.ca", $emailSetting->from_site);
+            $mail->setFrom("no-reply@relocayt.com", $emailSetting->from_site);
             $mail->addAddress($user->email, $user->name_or_email);
 
         } catch (Throwable $e) {
