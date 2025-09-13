@@ -24,6 +24,7 @@ use View;
 use SendGrid;
 use SendGrid\Mail\Mail;
 use Illuminate\Support\Str;
+use App\Models\Booking; 
 
 class EmailSendService extends CoreService
 {
