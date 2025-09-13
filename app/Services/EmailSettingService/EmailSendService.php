@@ -598,23 +598,15 @@ class EmailSendService extends CoreService
     }
     public function sendBookingConfirmationList(array $data, User $user): array
     {
-        // Use your preferred email setting row; `first()` is safest
-        $emailSetting = EmailSetting::find(3);
-        $mail = $this->emailBaseAuth($emailSetting, $user);
-
         try {
-            // Optional debug (set to 0 in prod)
-            // $mail->SMTPDebug = 2;
-            // $mail->Debugoutput = function($str, $level) { \Log::debug("SMTP [$level]: $str"); };
-
             // Build bookings HTML
             $bookingsHtml = '';
             foreach ($data['bookings'] as $b) {
                 $extrasHtml = '';
                 if (!empty($b['extras'])) {
                     $items = array_map(fn($t) => '<li>'.e($t).'</li>', $b['extras']);
-                    $extrasHtml = '<p style="margin:12px 0 6px;"><strong>Extras:</strong></p><ul style="margin:8px 0 0 18px;">'
-                                . implode('', $items) . '</ul>';
+                    $extrasHtml = '<p style="margin:12px 0 6px;"><strong>Extras:</strong></p>
+                                <ul style="margin:8px 0 0 18px;">'.implode('', $items).'</ul>';
                 }
 
                 $currency = e($b['currency'] ?? '');
@@ -624,16 +616,16 @@ class EmailSendService extends CoreService
                     <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px; border:1px solid #eee; border-radius:8px;">
                     <tr>
                         <td style="padding:16px 20px;">
-                        <h3 style="margin:0 0 8px;">Booking #'.e($b['booking_id']).'</h3>
-                        <p style="margin:6px 0;"><strong>Service:</strong> '.e($b['service_title']).'</p>
-                        '.(!empty($b['master_name']) ? '<p style="margin:6px 0;"><strong>Host:</strong> '.e($b['master_name']).'</p>' : '').'
-                        <p style="margin:6px 0;"><strong>Address:</strong> '.e($b['shop_address']).'</p>
-                        <p style="margin:6px 0;"><strong>Start:</strong> '.e($b['start_date']).'</p>
-                        <p style="margin:6px 0;"><strong>End:</strong> '.e($b['end_date']).'</p>
-                        '.$extrasHtml.'
-                        <p style="margin:12px 0 0;"><strong>Total:</strong> '.$currency.' '.$total.'</p>
-                        '.(!empty($b['payment_tag']) ? '<p style="margin:6px 0 0;"><strong>Payment:</strong> '.e(strtoupper($b['payment_tag'])).'</p>' : '').'
-                        '.(!empty($b['status']) ? '<p style="margin:6px 0 0;"><strong>Status:</strong> '.e(ucfirst($b['status'])).'</p>' : '').'
+                            <h3 style="margin:0 0 8px;">Booking #'.e($b['booking_id']).'</h3>
+                            <p style="margin:6px 0;"><strong>Service:</strong> '.e($b['service_title']).'</p>
+                            '.(!empty($b['master_name']) ? '<p style="margin:6px 0;"><strong>Host:</strong> '.e($b['master_name']).'</p>' : '').'
+                            <p style="margin:6px 0;"><strong>Address:</strong> '.e($b['shop_address']).'</p>
+                            <p style="margin:6px 0;"><strong>Start:</strong> '.e($b['start_date']).'</p>
+                            <p style="margin:6px 0;"><strong>End:</strong> '.e($b['end_date']).'</p>
+                            '.$extrasHtml.'
+                            <p style="margin:12px 0 0;"><strong>Total:</strong> '.$currency.' '.$total.'</p>
+                            '.(!empty($b['payment_tag']) ? '<p style="margin:6px 0 0;"><strong>Payment:</strong> '.e(strtoupper($b['payment_tag'])).'</p>' : '').'
+                            '.(!empty($b['status']) ? '<p style="margin:6px 0 0;"><strong>Status:</strong> '.e(ucfirst($b['status'])).'</p>' : '').'
                         </td>
                     </tr>
                     </table>
@@ -641,6 +633,9 @@ class EmailSendService extends CoreService
             }
 
             $userName = e($data['user_name'] ?? $user->name_or_email ?? 'Guest');
+            $firstId  = $data['bookings'][0]['booking_id'] ?? '';
+
+            $subject = 'Booking Request Received – Pending Host Confirmation #'.$firstId;
 
             $html = "
                 <h2 style='margin:0 0 12px;'>Your Booking Request is Pending</h2>
@@ -650,19 +645,17 @@ class EmailSendService extends CoreService
                 <p style='margin:18px 0 0;'>We look forward to hosting you.</p>
             ";
 
-            $firstId = $data['bookings'][0]['booking_id'] ?? '';
-            $mail->Subject = 'Booking Request Received – Pending Host Confirmation #'.$firstId;
-            $mail->Body    = $this->wrapEmailLayout($html);
-            $mail->AltBody = strip_tags($html);
-            $mail->isHTML(true);
+            $plain = strip_tags($html);
 
-            $ok = $mail->send();
+            // 🔹 Use SendGrid instead of PHPMailer
+            return $this->sendWithSendGrid(
+                $user->email,
+                $userName,
+                $subject,
+                $html,
+                $plain
+            );
 
-            return [
-                'status'  => (bool)$ok,
-                'code'    => $ok ? ResponseError::NO_ERROR : ResponseError::ERROR_504,
-                'message' => $ok ? 'sent' : $mail->ErrorInfo,
-            ];
         } catch (\Exception $e) {
             \Log::error('Booking confirmation email error', ['message' => $e->getMessage()]);
             return [
@@ -672,6 +665,7 @@ class EmailSendService extends CoreService
             ];
         }
     }
+
 
     public function sendVerificationSubmitted(User $user, array $data): array
     {
