@@ -245,7 +245,7 @@ class BookingController extends UserBaseController
      * @param FilterParamsRequest $request
      * @return JsonResponse
      */
-    public function canceledByParent(int $id, FilterParamsRequest $request): JsonResponse
+    public function canceledByParent_old(int $id, FilterParamsRequest $request): JsonResponse
     {
         try {
             $data = [
@@ -261,6 +261,41 @@ class BookingController extends UserBaseController
             return $this->successResponse(
                 __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
             );
+        } catch (Throwable $e) {
+            return $this->onErrorResponse([
+                'message' => $e->getMessage() . $e->getFile() . $e->getLine()
+            ]);
+        }
+    }
+    
+    public function canceledByParent(int $id, FilterParamsRequest $request): JsonResponse
+    {
+        try {
+            $data = [
+                'canceled_note' => (string)$request->input('canceled_note'),
+            ];
+
+            /** @var Booking $booking */
+            $booking = $this->service->cancelRequestByParent($id, $data);
+
+            try {
+                $mailer = app(\App\Services\EmailSettingService\EmailSendService::class);
+
+                $mailer->sendBookingCancelRequestReceived($booking->user, $booking);
+                $mailer->sendBookingCancelRequestToAdmin($booking);
+
+            } catch (\Exception $mailEx) {
+                \Log::error('❌ Failed to send cancel request emails', [
+                    'error'     => $mailEx->getMessage(),
+                    'bookingId' => $booking->id,
+                    'userId'    => $booking->user_id,
+                ]);
+            }
+
+            return $this->successResponse(
+                __('booking.cancel_request_submitted', locale: $this->language),
+            );
+
         } catch (Throwable $e) {
             return $this->onErrorResponse([
                 'message' => $e->getMessage() . $e->getFile() . $e->getLine()

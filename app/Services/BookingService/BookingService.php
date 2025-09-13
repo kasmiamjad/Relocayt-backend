@@ -370,7 +370,7 @@ class BookingService extends CoreService
      * @return mixed
      * @throws Throwable
      */
-    public function canceledByParent(int $id, array $data): mixed
+    public function canceledByParent_old(int $id, array $data): mixed
     {
         return DB::transaction(function () use ($id, $data) {
 
@@ -401,6 +401,30 @@ class BookingService extends CoreService
             return $model;
         });
     }
+
+    public function cancelRequestByParent(int $id, array $data): Booking
+    {
+        return DB::transaction(function () use ($id, $data) {
+            $model = Booking::with(['user', 'children'])
+                ->where('user_id', auth('sanctum')->id())
+                ->find($id);
+
+            if (empty($model)) {
+                throw new Exception(__('errors.' . ResponseError::ERROR_404, locale: $this->language));
+            }
+
+            /** @var Booking $model */
+            $model->update([
+                'status'        => Booking::STATUS_CANCEL_REQUEST,
+                'canceled_note' => $data['canceled_note'] ?? null,
+            ]);
+
+            (new BookingActivityService)->create($model, Booking::STATUS_CANCEL_REQUEST, $this->language, $data);
+
+            return $model->fresh();
+        });
+    }
+
 
     /**
      * @throws Exception

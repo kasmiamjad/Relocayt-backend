@@ -106,6 +106,7 @@ class Booking extends Model
     const STATUS_BOOKED    = 'booked';
     const STATUS_PROGRESS  = 'progress';
     const STATUS_ENDED     = 'ended';
+    const STATUS_CANCEL_REQUEST= 'cancel_request';
 
     const STATUSES = [
         self::STATUS_NEW       => self::STATUS_NEW,
@@ -113,6 +114,7 @@ class Booking extends Model
         self::STATUS_BOOKED    => self::STATUS_BOOKED,
         self::STATUS_PROGRESS  => self::STATUS_PROGRESS,
         self::STATUS_ENDED     => self::STATUS_ENDED,
+        self::STATUS_CANCEL_REQUEST => self::STATUS_CANCEL_REQUEST, 
     ];
 
     const MALE        = 1;

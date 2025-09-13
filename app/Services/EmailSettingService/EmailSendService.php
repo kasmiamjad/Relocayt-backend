@@ -968,4 +968,75 @@ class EmailSendService extends CoreService
             );
     }
 
+    public function sendBookingCancelRequestReceived(User $user, Booking $booking): array
+    {
+        $userName = $user->name_or_email
+            ?? trim(($user->firstname ?? '').' '.($user->lastname ?? ''))
+            ?: 'User';
+
+        $subject = "Booking Cancellation Request Received — Pending Admin Review";
+
+        $html = "
+            <h2 style='margin:0 0 12px;'>Cancellation Request Received</h2>
+            <p style='margin:0 0 18px;'>Dear {$userName},</p>
+            <p style='margin:0 0 18px;'>We have received your request to cancel booking 
+            <strong>#{$booking->id}</strong>. Our admin team will review it shortly.</p>
+
+            <div style='margin:18px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px;'>
+                <p style='margin:0;'><strong>Booking Details:</strong></p>
+                <ul style='margin:8px 0 0 18px;'>
+                    <li>Booking ID: {$booking->id}</li>
+                    <li>Status: {$booking->status}</li>
+                    <li>Your Note: {$booking->canceled_note}</li>
+                </ul>
+            </div>
+
+            <p style='margin:18px 0 0;'>We’ll notify you once the admin makes a decision.</p>
+        ";
+
+        $plain = strip_tags($html);
+
+        return $this->sendWithSendGrid(
+            $user->email,
+            $userName,
+            $subject,
+            $html,
+            $plain
+        );
+    }
+
+    public function sendBookingCancelRequestToAdmin(Booking $booking): array
+    {
+        $adminEmail = "kasmi.amjad@gmail.com";
+        $adminName  = 'Relocayt - Admin';
+
+        $subject = "Booking Cancellation Request — Action Required (Booking #{$booking->id})";
+
+        $html = "
+            <h2 style='margin:0 0 12px;'>Cancellation Request Pending Approval</h2>
+            <p style='margin:0 0 18px;'>A user has requested cancellation for booking <strong>#{$booking->id}</strong>.</p>
+
+            <div style='margin:18px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px;'>
+                <p style='margin:0;'><strong>Booking Details:</strong></p>
+                <ul style='margin:8px 0 0 18px;'>
+                    <li>User: {$booking->user->name_or_email} ({$booking->user->email})</li>
+                    <li>Status: {$booking->status}</li>
+                    <li>User Note: {$booking->canceled_note}</li>
+                </ul>
+            </div>
+
+            <p style='margin:18px 0 0;'>Please log in to the admin panel to approve or reject this request.</p>
+        ";
+
+        $plain = strip_tags($html);
+
+        return $this->sendWithSendGrid(
+            $adminEmail,
+            $adminName,
+            $subject,
+            $html,
+            $plain
+        );
+    }
+
 }
