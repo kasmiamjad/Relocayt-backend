@@ -20,6 +20,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Throwable;
+use App\Models\User;
 
 class BookingController extends UserBaseController
 {
@@ -267,7 +268,7 @@ class BookingController extends UserBaseController
             ]);
         }
     }
-    
+
     public function canceledByParent(int $id, FilterParamsRequest $request): JsonResponse
     {
         try {
@@ -277,6 +278,9 @@ class BookingController extends UserBaseController
 
             /** @var Booking $booking */
             $booking = $this->service->cancelRequestByParent($id, $data);
+            \Log::info('📌 Cancel Request Booking Data', [
+                'booking' => $booking->toArray()
+            ]);
 
             try {
                 $mailer = app(\App\Services\EmailSettingService\EmailSendService::class);
