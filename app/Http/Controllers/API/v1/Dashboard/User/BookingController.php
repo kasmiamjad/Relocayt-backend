@@ -278,6 +278,7 @@ class BookingController extends UserBaseController
 
             /** @var Booking $booking */
             $booking = $this->service->cancelRequestByParent($id, $data);
+            $booking->load('user');
             \Log::info('📌 Cancel Request Booking Data', [
                 'booking' => $booking->toArray()
             ]);
