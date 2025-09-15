@@ -110,18 +110,27 @@ class ShopService extends CoreService
                     return $shop;
                 });
             }
+            $randomSuffix = Str::random(6); // e.g., "aZ9fP2"
+
+            // If seller has email → append "-suffix"
+            $masterEmail = $seller->email
+                ? explode('@', $seller->email)[0] . '-' . $randomSuffix . '@' . explode('@', $seller->email)[1]
+                : null;
+
+            // If seller has phone → append "-suffix"
+            $masterPhone = $seller->phone ? $seller->phone . '-' . $randomSuffix : null;
 
             $response = app(\App\Services\UserServices\UserService::class)->create([
-                'firstname' => data_get($data, 'title.en', 'Master'),
+                'firstname' => $seller->firstname,
                 'lastname'  => $seller->lastname,
-                'email'     => $this->generateUniqueEmail($seller->email),
-                'phone'     => NULL,
+                'email'     => $masterEmail,
+                'phone'     => $masterPhone,
                 'password'  => 'secure-default-password',
                 'password_confirmation' => 'secure-default-password',
                 'birthday'  => $seller->birthday?->format('Y-m-d'),
                 'gender'    => $seller->gender,
                 'role'      => 'master',
-                'images'    => [data_get($data, 'images.1')], 
+                'images'    => $seller->images ?? [data_get($data, 'images.1')], 
                 'shop_id'   => [$shop->id],
             ]);
 
@@ -273,7 +282,8 @@ class ShopService extends CoreService
                     'country'        => data_get($data, 'country'),
                     'street'         => data_get($data, 'street'),
                     'zipcode'        => data_get($data, 'zipcode'),
-                    'img'        => data_get($data, 'background_img'),
+                    'img'           => data_get($data, 'background_img'),
+                    'gallery'           => data_get($data, 'background_img'),
                     'property_id'    => $property->id,
                 ]);
 
