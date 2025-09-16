@@ -99,8 +99,7 @@ foreach ($model?->children ?? [] as $children) {
 }
 
 //?>
-<!doctype html>
-<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Receipt #{{ $model->id }}</title>
@@ -130,7 +129,7 @@ foreach ($model?->children ?? [] as $children) {
     <table class="header">
         <tr>
             <td>
-                <h2>Your receipt from {{ $model->shop?->translation?->title ?? 'Booking' }}</h2>
+                <h2>Your receipt from {{ $model->master?->firstname ?? 'Booking' }}</h2>
                 <div class="subtext">Receipt ID: BK-{{ $model->id }} • {{ now()->format('F d, Y') }}</div>
             </td>
             <td style="text-align: right;">
@@ -151,8 +150,8 @@ foreach ($model?->children ?? [] as $children) {
             </td>
         </tr>
         <tr><td>Traveler: {{ $userName }}</td></tr>
-        <tr><td>Master: {{ $services[0]['master'] }}</td></tr>
-        <tr><td>Status: {{ $services[0]['status'] }}</td></tr>
+        <!-- <tr><td>Master: {{ $services[0]['master'] }}</td></tr>
+        <tr><td>Status: {{ $services[0]['status'] }}</td></tr> -->
     </table>
 
     <!-- Price Breakdown -->
