@@ -353,8 +353,9 @@ class OrderRepository extends CoreRepository
         \Log::info('Invoice PDF Data:', [
             'data' => json_decode(json_encode($data), true)
         ]);
+        return view('booking-invoice', $data);
 
-        return $pdf->download('invoice.pdf');
+        //return $pdf->download('invoice.pdf');
     }
 
 }
