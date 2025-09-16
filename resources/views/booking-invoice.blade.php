@@ -1,262 +1,101 @@
 <!doctype html>
 <html lang="en">
-<?php
-/** @var App\Models\Booking $model */
-/** @var string $lang */
-
-/** @var string $logo */
-
-use App\Helpers\ResponseError;
-use App\Models\Booking;
-use App\Models\Transaction;
-use App\Models\Translation;
-
-$keys = array_merge([
-    'online',
-    'offline_in',
-    'offline_out',
-    'offline_out',
-], Transaction::STATUSES, Booking::STATUSES);
-
-$paymentMethod = $model?->transaction?->paymentSystem?->tag;
-$status = $model?->transaction?->status;
-
-if (!empty($paymentMethod)) {
-    $keys[] = $paymentMethod;
-}
-
-if (!empty($status)) {
-    $keys[] = $status;
-}
-
-$translations = Translation::where('locale', $lang)
-    ->whereIn('key', array_values($keys))
-    ->pluck('value', 'key')
-    ->toArray();
-
-$paymentMethod = $translations[$paymentMethod] ?? $paymentMethod;
-
-$userName = $model?->user?->full_name;
-$userPhone = $model?->user?->phone;
-
-$address = data_get($model?->data, 'address', '');
-$position = $model?->currency?->position;
-$symbol = $model?->currency?->symbol;
-
-$title = $model->serviceMaster?->service?->translation?->title;
-
-$genders = [
-    1 => ResponseError::MALE,
-    2 => ResponseError::FEMALE,
-    3 => ResponseError::ALL_GENDER,
-];
-
-$gender = data_get($genders, $model->gender, 'all.gender');
-$type = $children->type ?? $model->type;
-
-$services = [
-    [
-        'date_from'     => $model->start_date?->format('g:i A'),
-        'date_to'       => $model->end_date?->format('g:i A'),
-        'status'        => $translations[$model->status] ?? $model->status,
-        'type'          => $translations[$type] ?? $type,
-        'master'        => $model->master?->full_name,
-        'title'         => $title,
-        'gender'        => __("errors.$gender", locale: $lang),
-        'discount'      => $model->rate_discount,
-        'gift_cart'     => $model->rate_gift_cart_price,
-        'membership'    => !!$model->user_member_ship_id,
-        'service_fee'   => $model->rate_service_fee,
-        'extra_price'   => $model->rate_extra_price,
-        'coupon_price'  => $model->rate_coupon_price,
-        'total_price'   => $model->rate_total_price,
-    ]
-];
-
-foreach ($model?->children ?? [] as $children) {
-
-    $title = $children->serviceMaster?->service?->translation?->title;
-
-    $gender = data_get($genders, $children->gender, 'all.gender');
-    $type = $children->type ?? $model->type;
-
-    $services[] = [
-        'date_from'     => $children->start_date?->format('g:i A'),
-        'date_to'       => $children->end_date?->format('g:i A'),
-        'status'        => $translations[$children->status] ?? $children->status,
-        'type'          => $translations[$type] ?? $type,
-        'master'        => $children->master?->full_name,
-        'title'         => $title,
-        'gender'        => __("errors.$gender", locale: $lang),
-        'discount'      => $children->rate_discount,
-        'gift_cart'     => $children->rate_gift_cart_price,
-        'membership'    => !!$children->user_member_ship_id,
-        'service_fee'   => $children->rate_service_fee,
-        'extra_price'   => $children->rate_extra_price,
-        'coupon_price'  => $children->rate_coupon_price,
-        'total_price'   => $children->rate_total_price,
-    ];
-}
-
-//?>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, shrink-to-fit=no"
-    >
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{{ __('errors.' . ResponseError::BOOKING, locale: $lang) }}</title>
-    <link
-            rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
-            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-            crossorigin="anonymous"
-    >
+    <title>Invoice #{{ $model->id }}</title>
     <style>
-        html {
-            -webkit-box-sizing: border-box;
-            box-sizing: border-box;
-        }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #333; margin: 30px; }
+        h1, h2, h3 { margin: 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header img { max-height: 40px; }
+        .subtext { color: #666; font-size: 11px; margin-top: 4px; }
 
-        .logo {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            overflow: hidden;
-        }
+        .grid { display: flex; gap: 20px; }
+        .box { border: 1px solid #ddd; padding: 15px; border-radius: 6px; flex: 1; }
 
-        .subtitle {
-            margin-top: 50px;
-        }
+        .price-table, .payment-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .price-table td, .payment-table td { padding: 6px 0; font-size: 12px; }
+        .price-table td:last-child, .payment-table td:last-child { text-align: right; }
+        .total-row td { font-weight: bold; border-top: 1px solid #000; padding-top: 8px; }
 
-        .space {
-            margin-top: 300px;
-        }
+        .footer { font-size: 10px; color: #777; margin-top: 40px; border-top: 1px solid #ddd; padding-top: 10px; }
     </style>
 </head>
 <body>
-<div class="container d-flex justify-content-between">
-    <div class="float-left">
-        <img class="logo" src="{{$logo}}" alt="logo"/>
-    </div>
-    <div class="float-right">
-        <h1 class="title">{{ __('errors.' . ResponseError::INVOICE, locale: $lang) }} #{{ $model?->id }}</h1>
-        <h2 class="title gray">{{ $model->start_date?->format('Y-m-d') }} - {{ $model->end_date?->format('Y-m-d') }}</h2>
-    </div>
-</div>
-<div class="container d-flex justify-content-between" style="margin-top: 100px">
-    <div class="float-left" style="margin-right: 50px">
-        <h3 class="subtitle">{{ __('errors.' . ResponseError::CLIENT, locale: $lang) }}</h3>
-        <div class="address__info">
-            <div class="address__info--item">{!! $userName !!}</div>
-            <div class="address__info--item">{!! $address !!}</div>
-            <div class="address__info--item">
-                {!! !empty($userPhone) ? '+' . str_replace('+', '', $userPhone) : '' !!}
-            </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h2>Your receipt from {{ $model->shop?->translation?->title ?? 'Booking' }}</h2>
+            <div class="subtext">Receipt ID: BK-{{ $model->id }} • {{ now()->format('F d, Y') }}</div>
+        </div>
+        <div>
+            <img src="{{ $logo }}" alt="logo">
         </div>
     </div>
-</div>
-<div class="space"></div>
-<table class="table table-striped mt-4 table-bordered"> {{-- style="page-break-after: always;" --}}
-    <thead>
-    <tr>
-        <th scope="col">{{ __('errors.' . ResponseError::SERVICE_NAME, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::DATE_FROM, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::DATE_TO, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::STATUS, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::PLACE, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::MASTER, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::PAYMENT_TYPE, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::TRANSACTION_STATUS, locale: $lang) }}</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach($services as $service)
-        <tr>
-            <th scope="row">{{ $service['title'] }}</th>
-            <td>{{ $service['date_from'] }}</td>
-            <td>{{ $service['date_to'] }}</td>
-            <td>{{ $service['status'] }}</td>
-            <td>{{ $service['type'] }}</td>
-            <td>{{ $service['master'] }}</td>
-            <td>{{ $translations[$paymentMethod] ?? $paymentMethod }}</td>
-            <td>{{ $translations[$status] ?? $status }}</td>
-        </tr>
-    @endforeach
-    </tbody>
-</table>
-<div class="space"></div>
-<table class="table table-striped mt-4 table-bordered"> {{-- style="page-break-after: always;" --}}
-    <thead>
-    <tr>
-        <th scope="col">{{ __('errors.' . ResponseError::DISCOUNT, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::SERVICE_FEE, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::EXTRA_PRICE, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::COUPON, locale: $lang) }}</th>
-        <th scope="col">{{ __('errors.' . ResponseError::TOTAL_PRICE, locale: $lang) }}</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach($services as $service)
-        <tr>
-            <td>
-                {{ $position === 'before' ? $symbol : '' }}
-                {{ number_format($service['discount'] ?? 0, 2)  }}
-                {{ $position === 'after' ? $symbol : '' }}
-            </td>
-            <td>
-                {{ $position === 'before' ? $symbol : '' }}
-                {{ number_format($service['service_fee'] ?? 0, 2)  }}
-                {{ $position === 'after' ? $symbol : '' }}
-            </td>
-            <td>
-                {{ $position === 'before' ? $symbol : '' }}
-                {{ number_format($service['extra_price'] ?? 0, 2)  }}
-                {{ $position === 'after' ? $symbol : '' }}
-            </td>
-            <td>
-                {{ $position === 'before' ? $symbol : '' }}
-                {{ number_format($service['coupon_price'] ?? 0, 2)  }}
-                {{ $position === 'after' ? $symbol : '' }}
-            </td>
-            <td>
-                {{ $position === 'before' ? $symbol : '' }}
-                {{ number_format($service['total_price'] ?? 0, 2)  }}
-                {{ $position === 'after' ? $symbol : '' }}
-            </td>
-        </tr>
-    @endforeach
-    </tbody>
-</table>
-<table class="table table-striped mt-4 table-bordered">
-    <thead>
-    <tr>
-        <th scope="col">{{ __('errors.' . ResponseError::SHOP, locale: $lang) }}</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <th scope="row">{{$model?->shop?->translation?->title}}</th>
-    </tr>
-    </tbody>
-</table>
-<script
-        src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-        crossorigin="anonymous">
-</script>
 
-<script
-        src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-        crossorigin="anonymous">
-</script>
+    <!-- Main Grid -->
+    <div class="grid">
 
-<script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-        crossorigin="anonymous">
-</script>
+        <!-- Booking Info -->
+        <div class="box">
+            <h3>{{ $services[0]['title'] }}</h3>
+            <div class="subtext">{{ $model->start_date?->format('D, M d, Y') }} → {{ $model->end_date?->format('D, M d, Y') }}</div>
+            <p>{{ $services[0]['type'] }} • {{ $services[0]['gender'] }}</p>
+            <p>Traveler: {{ $model->user?->full_name }}</p>
+            <p>Master: {{ $services[0]['master'] }}</p>
+            <p>Status: {{ $services[0]['status'] }}</p>
+        </div>
+
+        <!-- Price Breakdown -->
+        <div class="box">
+            <h3>Price breakdown</h3>
+            <table class="price-table">
+                <tr>
+                    <td>Service fee</td>
+                    <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_service_fee,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+                </tr>
+                <tr>
+                    <td>Extras</td>
+                    <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_extra_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+                </tr>
+                <tr>
+                    <td>Discount</td>
+                    <td>-{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_discount,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+                </tr>
+                <tr>
+                    <td>Coupon</td>
+                    <td>-{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_coupon_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td>Total</td>
+                    <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_total_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="box">
+            <h3>Payment</h3>
+            <table class="payment-table">
+                <tr>
+                    <td>{{ $paymentMethod }}</td>
+                    <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->transaction?->price ?? 0, 2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td>Amount paid</td>
+                    <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->transaction?->price ?? 0, 2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Thank you for booking with {{ $model->shop?->translation?->title ?? 'our service' }}.<br>
+        For support, contact us at {{ $model->shop?->email ?? 'support@example.com' }}.
+    </div>
 
 </body>
 </html>
