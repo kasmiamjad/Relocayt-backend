@@ -127,7 +127,7 @@ foreach ($model?->children ?? [] as $children) {
     <!-- Header -->
     <div class="header">
         <div>
-            <h2>Your receipt from {{ $model->shop?->translation?->title ?? 'Booking' }}</h2>
+            <h2>Your receipt from {{ $model->master?->firstname ?? 'Booking' }}</h2>
             <div class="subtext">Receipt ID: BK-{{ $model->id }} • {{ now()->format('F d, Y') }}</div>
         </div>
         <div>
@@ -142,10 +142,8 @@ foreach ($model?->children ?? [] as $children) {
         <div class="box">
             <h3>{{ $services[0]['title'] }}</h3>
             <div class="subtext">{{ $model->start_date?->format('D, M d, Y') }} → {{ $model->end_date?->format('D, M d, Y') }}</div>
-            <p>{{ $services[0]['type'] }} • {{ $services[0]['gender'] }}</p>
             <p>Traveler: {{ $model->user?->full_name }}</p>
-            <p>Master: {{ $services[0]['master'] }}</p>
-            <p>Status: {{ $services[0]['status'] }}</p>
+            <!-- <p>Status: {{ $services[0]['status'] }}</p> -->
         </div>
 
         <!-- Price Breakdown -->
@@ -154,7 +152,7 @@ foreach ($model?->children ?? [] as $children) {
             <table class="price-table">
                 <tr>
                     <td>Service fee</td>
-                    <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_service_fee,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+                    <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
                 </tr>
                 <tr>
                     <td>Extras</td>
@@ -194,8 +192,8 @@ foreach ($model?->children ?? [] as $children) {
 
     <!-- Footer -->
     <div class="footer">
-        Thank you for booking with {{ $model->shop?->translation?->title ?? 'our service' }}.<br>
-        For support, contact us at {{ $model->shop?->email ?? 'support@example.com' }}.
+        Thank you for booking with {{ $model->master?->firstname ?? 'our service' }}.<br>
+        For support, contact us at {{ $model->shop?->email ?? 'support@relocayt.com' }}.
     </div>
 
 </body>
