@@ -1,5 +1,106 @@
 <!doctype html>
 <html lang="en">
+<?php
+/** @var App\Models\Booking $model */
+/** @var string $lang */
+
+/** @var string $logo */
+
+use App\Helpers\ResponseError;
+use App\Models\Booking;
+use App\Models\Transaction;
+use App\Models\Translation;
+
+$keys = array_merge([
+    'online',
+    'offline_in',
+    'offline_out',
+    'offline_out',
+], Transaction::STATUSES, Booking::STATUSES);
+
+$paymentMethod = $model?->transaction?->paymentSystem?->tag;
+$status = $model?->transaction?->status;
+
+if (!empty($paymentMethod)) {
+    $keys[] = $paymentMethod;
+}
+
+if (!empty($status)) {
+    $keys[] = $status;
+}
+
+$translations = Translation::where('locale', $lang)
+    ->whereIn('key', array_values($keys))
+    ->pluck('value', 'key')
+    ->toArray();
+
+$paymentMethod = $translations[$paymentMethod] ?? $paymentMethod;
+
+$userName = $model?->user?->full_name;
+$userPhone = $model?->user?->phone;
+
+$address = data_get($model?->data, 'address', '');
+$position = $model?->currency?->position;
+$symbol = $model?->currency?->symbol;
+
+$title = $model->serviceMaster?->service?->translation?->title;
+
+$genders = [
+    1 => ResponseError::MALE,
+    2 => ResponseError::FEMALE,
+    3 => ResponseError::ALL_GENDER,
+];
+
+$gender = data_get($genders, $model->gender, 'all.gender');
+$type = $children->type ?? $model->type;
+
+$services = [
+    [
+        'date_from'     => $model->start_date?->format('g:i A'),
+        'date_to'       => $model->end_date?->format('g:i A'),
+        'status'        => $translations[$model->status] ?? $model->status,
+        'type'          => $translations[$type] ?? $type,
+        'master'        => $model->master?->full_name,
+        'title'         => $title,
+        'gender'        => __("errors.$gender", locale: $lang),
+        'discount'      => $model->rate_discount,
+        'gift_cart'     => $model->rate_gift_cart_price,
+        'membership'    => !!$model->user_member_ship_id,
+        'service_fee'   => $model->rate_service_fee,
+        'extra_price'   => $model->rate_extra_price,
+        'coupon_price'  => $model->rate_coupon_price,
+        'total_price'   => $model->rate_total_price,
+    ]
+];
+
+foreach ($model?->children ?? [] as $children) {
+
+    $title = $children->serviceMaster?->service?->translation?->title;
+
+    $gender = data_get($genders, $children->gender, 'all.gender');
+    $type = $children->type ?? $model->type;
+
+    $services[] = [
+        'date_from'     => $children->start_date?->format('g:i A'),
+        'date_to'       => $children->end_date?->format('g:i A'),
+        'status'        => $translations[$children->status] ?? $children->status,
+        'type'          => $translations[$type] ?? $type,
+        'master'        => $children->master?->full_name,
+        'title'         => $title,
+        'gender'        => __("errors.$gender", locale: $lang),
+        'discount'      => $children->rate_discount,
+        'gift_cart'     => $children->rate_gift_cart_price,
+        'membership'    => !!$children->user_member_ship_id,
+        'service_fee'   => $children->rate_service_fee,
+        'extra_price'   => $children->rate_extra_price,
+        'coupon_price'  => $children->rate_coupon_price,
+        'total_price'   => $children->rate_total_price,
+    ];
+}
+
+//?>
+<!doctype html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Invoice #{{ $model->id }}</title>
@@ -99,3 +200,22 @@
 
 </body>
 </html>
+
+<script
+        src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous">
+</script>
+
+<script
+        src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous">
+</script>
+
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous">
+</script>
+
