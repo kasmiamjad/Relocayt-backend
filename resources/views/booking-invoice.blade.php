@@ -105,119 +105,93 @@ foreach ($model?->children ?? [] as $children) {
     <meta charset="UTF-8">
     <title>Receipt #{{ $model->id }}</title>
     <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
-            color: #333;
-            margin: 20px;
-        }
-        h1, h2, h3 { margin: 0; }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .header img {
-            max-height: 35px;
-            max-width: 120px;
-            object-fit: contain;
-        }
-        .subtext { color: #666; font-size: 11px; margin-top: 4px; }
-
-        .card {
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 12px 15px;
-            margin-bottom: 15px;
-        }
-        .card h3 { font-size: 14px; margin-bottom: 8px; }
+        @page { margin: 10mm; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #333; margin: 0; }
+        h2, h3 { margin: 0; }
+        .subtext { color: #666; font-size: 11px; }
 
         table { width: 100%; border-collapse: collapse; }
-        td { padding: 6px 0; font-size: 12px; }
-        td:last-child { text-align: right; }
-        .total-row td {
-            font-weight: bold;
-            border-top: 1px solid #000;
-            padding-top: 6px;
-        }
+        td, th { padding: 6px; vertical-align: top; }
+        .header td { border-bottom: 1px solid #ddd; }
+        .card { border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-top: 10px; }
+        .card-title { font-weight: bold; margin-bottom: 6px; }
 
-        .footer {
-            font-size: 10px;
-            color: #777;
-            margin-top: 30px;
-            text-align: center;
-            line-height: 1.4;
-        }
+        .price-table td { padding: 4px 6px; }
+        .price-table td:last-child { text-align: right; }
+        .total-row td { font-weight: bold; border-top: 1px solid #000; }
+
+        .footer { font-size: 10px; color: #777; text-align: center; padding-top: 10px; margin-top: 20px; border-top: 1px solid #ddd; }
+        img.logo { max-height: 30px; max-width: 100px; }
     </style>
 </head>
 <body>
 
     <!-- Header -->
-    <div class="header">
-        <div>
-            <h2>Your receipt from {{ $model->shop?->translation?->title ?? 'Booking' }}</h2>
-            <div class="subtext">Receipt ID: BK-{{ $model->id }} • {{ now()->format('F d, Y') }}</div>
-        </div>
-        <div>
-            <img src="{{ $logo }}" alt="logo">
-        </div>
-    </div>
+    <table class="header">
+        <tr>
+            <td>
+                <h2>Your receipt from {{ $model->shop?->translation?->title ?? 'Booking' }}</h2>
+                <div class="subtext">Receipt ID: BK-{{ $model->id }} • {{ now()->format('F d, Y') }}</div>
+            </td>
+            <td style="text-align: right;">
+                <img src="{{ $logo }}" class="logo" alt="logo">
+            </td>
+        </tr>
+    </table>
 
     <!-- Booking Info -->
-    <div class="card">
-        <h3>{{ $services[0]['title'] }}</h3>
-        <div class="subtext">
-            {{ $model->start_date?->format('D, M d, Y') }}
-            → {{ $model->end_date?->format('D, M d, Y') }}
-        </div>
-        <p>{{ $services[0]['type'] }} • {{ $services[0]['gender'] }}</p>
-        <p>Traveler: {{ $userName }}</p>
-        <p>Master: {{ $services[0]['master'] }}</p>
-        <p>Status: {{ $services[0]['status'] }}</p>
-    </div>
+    <table class="card" style="margin-top:15px;">
+        <tr>
+            <td class="card-title">{{ $services[0]['title'] }}</td>
+        </tr>
+        <tr>
+            <td class="subtext">
+                {{ $model->start_date?->format('D, M d, Y') }}
+                → {{ $model->end_date?->format('D, M d, Y') }}
+            </td>
+        </tr>
+        <tr><td>Traveler: {{ $userName }}</td></tr>
+        <tr><td>Master: {{ $services[0]['master'] }}</td></tr>
+        <tr><td>Status: {{ $services[0]['status'] }}</td></tr>
+    </table>
 
     <!-- Price Breakdown -->
-    <div class="card">
-        <h3>Price breakdown</h3>
-        <table>
-            <tr>
-                <td>Service fee</td>
-                <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
-            </tr>
-            <tr>
-                <td>Extras</td>
-                <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_extra_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
-            </tr>
-            <tr>
-                <td>Discount</td>
-                <td>-{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_discount,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
-            </tr>
-            <tr>
-                <td>Coupon</td>
-                <td>-{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_coupon_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
-            </tr>
-            <tr class="total-row">
-                <td>Total</td>
-                <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_total_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
-            </tr>
-        </table>
-    </div>
+    <table class="card price-table" style="margin-top:15px;">
+        <tr><td colspan="2" class="card-title">Price breakdown</td></tr>
+        <tr>
+            <td>Service fee</td>
+            <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+        </tr>
+        <tr>
+            <td>Extras</td>
+            <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_extra_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+        </tr>
+        <tr>
+            <td>Discount</td>
+            <td>-{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_discount,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+        </tr>
+        <tr>
+            <td>Coupon</td>
+            <td>-{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_coupon_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+        </tr>
+        <tr class="total-row">
+            <td>Total</td>
+            <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->rate_total_price,2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+        </tr>
+    </table>
 
     <!-- Payment Info -->
-    <div class="card">
-        <h3>Payment</h3>
-        <table>
-            <tr>
-                <td>{{ $paymentMethod }}</td>
-                <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->transaction?->price ?? 0, 2) }}{{ $position === 'after' ? $symbol : '' }}</td>
-            </tr>
-            <tr class="total-row">
-                <td>Amount paid</td>
-                <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->transaction?->price ?? 0, 2) }}{{ $position === 'after' ? $symbol : '' }}</td>
-            </tr>
-        </table>
-    </div>
+    <table class="card payment-table" style="margin-top:15px;">
+        <tr><td colspan="2" class="card-title">Payment</td></tr>
+        <tr>
+            <td>{{ $paymentMethod }}</td>
+            <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->transaction?->price ?? 0, 2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+        </tr>
+        <tr class="total-row">
+            <td>Amount paid</td>
+            <td>{{ $position === 'before' ? $symbol : '' }}{{ number_format($model->transaction?->price ?? 0, 2) }}{{ $position === 'after' ? $symbol : '' }}</td>
+        </tr>
+    </table>
 
     <!-- Footer -->
     <div class="footer">
@@ -227,7 +201,6 @@ foreach ($model?->children ?? [] as $children) {
 
 </body>
 </html>
-
 
 <script
         src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
