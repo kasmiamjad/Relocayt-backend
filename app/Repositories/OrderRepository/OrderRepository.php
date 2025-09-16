@@ -334,7 +334,8 @@ class OrderRepository extends CoreRepository
         /** @var Booking $booking */
         $titleKey = "booking.invoice.$booking->status.title";
         $title    = Translation::where(['locale' => $this->language, 'key' => $titleKey])->first()?->value ?? $titleKey;
-        $logo     = Settings::where('key', 'logo')->first()?->value;
+        //$logo     = Settings::where('key', 'logo')->first()?->value;
+        $logo = "https://relocayt-images.s3.us-east-1.amazonaws.com/public/images/relocayt-light-text.png";
 
         Pdf::setOption(['dpi' => 150, 'defaultFont' => 'sans-serif']);
         $gallery = json_decode($booking->serviceMaster?->service?->gallery ?? '[]', true);
