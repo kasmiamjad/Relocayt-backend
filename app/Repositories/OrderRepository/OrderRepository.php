@@ -16,6 +16,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class OrderRepository extends CoreRepository
 {
@@ -342,6 +343,9 @@ class OrderRepository extends CoreRepository
             'lang'  => $this->language,
             'title' => $title,
             'logo'  => $logo,
+        ]);
+        \Log::info('Invoice PDF Data:', [
+            'data' => json_decode(json_encode($data), true)
         ]);
 
         return $pdf->download('invoice.pdf');
