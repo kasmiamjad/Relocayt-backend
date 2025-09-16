@@ -344,6 +344,12 @@ class OrderRepository extends CoreRepository
             'title' => $title,
             'logo'  => $logo,
         ]);
+        $data = [
+            'model' => $booking,
+            'lang'  => $this->language,
+            'title' => $title,
+            'logo'  => $logo,
+        ];
         \Log::info('Invoice PDF Data:', [
             'data' => json_decode(json_encode($data), true)
         ]);
