@@ -130,10 +130,10 @@ foreach ($model?->children ?? [] as $children) {
         <tr>
             <td>
                 <h2>Your receipt from {{ $model->master?->firstname ?? 'Booking' }}</h2>
-                <div class="subtext">Receipt ID: BK-{{ $model->id }} • {{ now()->format('F d, Y') }}</div>
+                <div class="subtext">Receipt ID: R-{{ $model->id }} • {{ now()->format('F d, Y') }}</div>
             </td>
             <td style="text-align: right;">
-                <img src="{{ $logo }}" class="logo" alt="logo">
+                <img src="{{ $logo }}" alt="logo" style="max-height:40px; max-width:120px; object-fit:contain;">
             </td>
         </tr>
     </table>
@@ -141,18 +141,25 @@ foreach ($model?->children ?? [] as $children) {
     <!-- Booking Info -->
     <table class="card" style="margin-top:15px;">
         <tr>
-            <td class="card-title">{{ $services[0]['title'] }}</td>
-        </tr>
-        <tr>
-            <td class="subtext">
-                {{ $model->start_date?->format('D, M d, Y') }}
-                → {{ $model->end_date?->format('D, M d, Y') }}
+            <td style="width:70%">
+                <strong>{{ $services[0]['title'] }}</strong><br>
+                <span class="subtext">
+                    {{ $model->start_date?->format('D, M d, Y') }}
+                    → {{ $model->end_date?->format('D, M d, Y') }}
+                </span><br>
+                Traveler: {{ $userName }}<br>
+                <!-- Master: {{ $services[0]['master'] }}<br>
+                Status: {{ $services[0]['status'] }} -->
+            </td>
+            <td style="width:30%; text-align:right;">
+                @if(!empty($serviceImage))
+                    <img src="{{ $serviceImage }}" alt="service photo"
+                        style="max-height:80px; max-width:120px; object-fit:cover; border-radius:4px;">
+                @endif
             </td>
         </tr>
-        <tr><td>Traveler: {{ $userName }}</td></tr>
-        <!-- <tr><td>Master: {{ $services[0]['master'] }}</td></tr>
-        <tr><td>Status: {{ $services[0]['status'] }}</td></tr> -->
     </table>
+
 
     <!-- Price Breakdown -->
     <table class="card price-table" style="margin-top:15px;">
@@ -194,7 +201,7 @@ foreach ($model?->children ?? [] as $children) {
 
     <!-- Footer -->
     <div class="footer">
-        Thank you for booking with {{ $model->shop?->translation?->title ?? 'our service' }}.<br>
+        Thank you for booking with {{ $model->master?->firstname ?? 'our service' }}.<br>
         For support, contact us at {{ $model->shop?->email ?? 'support@relocayt.com' }}.
     </div>
 

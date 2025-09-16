@@ -337,12 +337,15 @@ class OrderRepository extends CoreRepository
         $logo     = Settings::where('key', 'logo')->first()?->value;
 
         Pdf::setOption(['dpi' => 150, 'defaultFont' => 'sans-serif']);
+        $gallery = json_decode($booking->serviceMaster?->service?->gallery ?? '[]', true);
+        $serviceImage = $gallery[0] ?? null;
 
         $pdf = Pdf::loadView('booking-invoice', [
             'model' => $booking,
             'lang'  => $this->language,
             'title' => $title,
             'logo'  => $logo,
+            'serviceImage' => $serviceImage,
         ]);
         $data = [
             'model' => $booking,
