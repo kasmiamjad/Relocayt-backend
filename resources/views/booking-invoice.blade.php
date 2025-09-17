@@ -200,11 +200,32 @@ foreach ($model?->children ?? [] as $children) {
     </table>
 
     <!-- Footer -->
-    <div class="footer">
-        Thank you for booking with {{ $model->master?->firstname ?? 'our service' }}.<br>
-        For support, contact us at {{ $model->shop?->email ?? 'support@relocayt.com' }}.
-    </div>
-
+     <!-- Company Footer -->
+    <table style="width:100%; margin-top:30px; font-size:10px; color:#555; border-top:1px solid #ddd; padding-top:10px;">
+        <tr>
+            <td colspan="2" style="padding-bottom:8px;">
+                <strong>Relocayt Technologies Inc.</strong><br>
+                Relocayt is a platform to connect students, hosts and service providers. 
+                Upon your payment of the Total Price to Relocayt, your payment obligation to the Host is satisfied. 
+                Refund requests will be processed in accordance with the Host’s cancellation policy. 
+                For more details, visit <a href="https://relocayt.com/relocayt_host_terms_conditions" target="_blank">www.relocayt.com/relocayt_host_terms_conditions</a>.
+            </td>
+        </tr>
+        <tr>
+            <td style="width:50%; vertical-align:top;">
+                <strong>Address</strong><br>
+                Saint John, New Brunswick, Canada<br><br>
+                <strong>Phone</strong><br>
+                +1 (506) 654-1506
+            </td>
+            <td style="width:50%; text-align:right; vertical-align:top;">
+                <strong>Email</strong><br>
+                support@relocayt.com<br><br>
+                <img src="{{ $logo }}" alt="Relocayt logo" style="max-height:30px; margin-top:5px;">
+            </td>
+        </tr>
+    </table>
+  
 </body>
 </html>
 
